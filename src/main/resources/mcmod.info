@@ -1,0 +1,16 @@
+[
+{
+  "modid": "abel_wallpaper",
+  "name": "Abel's Wallpaper Mod",
+  "description": "Paint block faces with other blocks' textures. Great for interior walls!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["abel1502"],
+  "credits": "The Forge and FML guys, for making this example",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
