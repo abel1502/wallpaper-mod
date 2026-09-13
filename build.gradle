@@ -21,9 +21,13 @@ minecraft {
 }
 
 repositories {
+    // maven {
+    //     name = "ModMaven"
+    //     url = "https://modmaven.dev"
+    // }
     maven {
-        name = 'ModMaven'
-        url = 'https://modmaven.dev'
+        name = "FalsePattern"
+        url = "https://mvn.falsepattern.com/releases/"
     }
     maven {
         name = "gt"
@@ -48,6 +52,8 @@ dependencies {
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+    implementation "com.falsepattern:chunkapi-mc1.7.10:0.8.4"
+    implementation "com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:0.3.1:dev"
 
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
@@ -62,7 +68,7 @@ processResources {
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
+        include "mcmod.info"
                 
         // replace version and mcversion
         expand 'version':project.version, 'mcversion':project.minecraft.version
@@ -70,6 +76,6 @@ processResources {
         
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+        exclude "mcmod.info"
     }
 }
