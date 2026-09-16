@@ -7,6 +7,9 @@ clean:
 build:
     ./gradlew build
 
+run:
+    ./gradlew runClient
+
 deploy TARGET=("D:/Games/PrismLauncher/data/instances/Dev/minecraft/mods"): build
     $target = "{{TARGET}}"; \
     $lib = (gci ./build/libs | sort LastWriteTime | select -last 1); \

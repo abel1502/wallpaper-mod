@@ -6,6 +6,7 @@ buildscript {
     }
     dependencies {
         classpath ('com.anatawa12.forge:ForgeGradle:1.2-1.0.+') {changing = true}
+        // classpath 'com.github.GTNewHorizons:ForgeGradle:1.2.11'
     }
 }
 
@@ -15,16 +16,18 @@ version = "1.0"
 group= "com.abel.wallpaper"  // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "abel-wallpaper"
 
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
 minecraft {
     version = "1.7.10-10.13.4.1614-1.7.10"
     runDir = "eclipse"
 }
 
 repositories {
-    // maven {
-    //     name = "ModMaven"
-    //     url = "https://modmaven.dev"
-    // }
+    maven {
+        name = "Jitpack"
+        url = "https://jitpack.io"
+    }
     maven {
         name = "FalsePattern"
         url = "https://mvn.falsepattern.com/releases/"
@@ -34,31 +37,18 @@ repositories {
         url = "https://gregtech.mechaenetia.com/"
     }
     maven {
-        name = "Jitpack"
-        url = "https://jitpack.io"
-    }
-    maven {
         name = "CurseMaven"
         url = "https://cursemaven.com"
     }
+    mavenCentral()
 }
 
 dependencies {
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-      
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+    // TODO: dependency
     implementation "com.falsepattern:chunkapi-mc1.7.10:0.8.4"
-    implementation "com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:0.3.1:dev"
 
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
+    compileOnly "com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:0.3.1:dev"
+    compileOnly "curse.maven:angelica-988067:8884082"
 }
 
 processResources {
@@ -78,4 +68,53 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude "mcmod.info"
     }
+}
+
+// -- Generic Mixin setup --
+
+runClient {
+    args("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+}
+
+runServer {
+    args("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+}
+
+def outSrgFile = "${tasks.compileJava.temporaryDir}/outSrg.srg"
+def outRefMapFile = "${tasks.compileJava.temporaryDir}/mixins.abel_wallpaper.refmap.json"
+
+jar {
+    manifest {
+        attributes (
+            // This is the regular way of registering Mixin configs.
+            // Setting the tweak class allows Mixin to discover your mod.
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+            // Mixin will automatically register any configs specified here.
+            'MixinConfigs': "mixins.abel_wallpaper.json",
+            
+            // To use the IEarlyMixinLoader interface, an FML plugin needs to be
+            // registered.
+            // Note: the previous two properties aren't required for the early
+            // interface.
+            // 'FMLCorePlugin': 'com.abel.wallpaper.WallpaperMod',
+            
+            // If your mod also contains a Forge mod (marked by a @Mod annotation),
+            // these need to be set or it will get ignored.
+            // Note that a Forge mod is required for late mixins to work.
+            //
+            // Allow Mixin to discover the Forge mod if FMLCorePluginContainsFMLMod
+            // is also set:
+            'ForceLoadAsMod': 'true',
+            // Allow Forge to discover the Forge mod:
+            'FMLCorePluginContainsFMLMod': 'true',
+        )
+    }
+    
+    from outRefMapFile;
+}
+
+tasks.compileJava.options.compilerArgs += ["-AreobfSrgFile=${tasks.reobf.srg}", "-AoutSrgFile=${outSrgFile}", "-AoutRefMapFile=${outRefMapFile}"];
+
+reobf {
+    addExtraSrgFile outSrgFile
 }

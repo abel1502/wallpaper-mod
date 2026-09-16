@@ -1,9 +1,6 @@
-package com.example.examplemod;
+package com.abel.wallpaper;
 
-import net.minecraft.init.Blocks;
-
-import java.util.logging.Logger;
-
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import cpw.mods.fml.common.Mod;
