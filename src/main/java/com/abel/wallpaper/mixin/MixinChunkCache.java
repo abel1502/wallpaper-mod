@@ -1,7 +1,5 @@
 package com.abel.wallpaper.mixin;
 
-import javax.annotation.Nullable;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -20,7 +18,6 @@ public abstract class MixinChunkCache implements IExtendedBlockAccess {
     private Chunk[][] chunkArray;
 
     @Override
-    @Nullable
     public Chunk getChunkFromChunkCoords(int chunkX, int chunkZ) {
         int idxX = chunkX - this.chunkX;
         int idxZ = chunkZ - this.chunkZ;

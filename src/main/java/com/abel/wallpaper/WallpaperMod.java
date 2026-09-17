@@ -11,7 +11,8 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
     modid = WallpaperMod.MODID,
     version = WallpaperMod.VERSION,
     name = WallpaperMod.NAME,
-    acceptedMinecraftVersions = "[1.7.10]"
+    acceptedMinecraftVersions = "[1.7.10]",
+    dependencies = "required-after:unimixins;required-after:chunkapi"
 )
 public class WallpaperMod {
     public static final String NAME = "Abel's Wallpaper Mod";
