@@ -5,6 +5,7 @@
     "refmap": "mixins.abel_wallpaper.refmap.json",
     "compatibilityLevel": "JAVA_8",
     "mixins": [
+        "MixinChunk",
         "MixinChunkCache",
         "MixinRenderBlocks",
         "MixinWorld"

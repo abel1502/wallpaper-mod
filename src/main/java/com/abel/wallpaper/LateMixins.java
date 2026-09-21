@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 @LateMixin
-public class AbelWallpaperLateMixins implements ILateMixinLoader {
+public class LateMixins implements ILateMixinLoader {
     @Override
     public String getMixinConfig() {
         return "mixins.abel_wallpaper.late.json";

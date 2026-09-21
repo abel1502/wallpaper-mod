@@ -33,6 +33,10 @@ repositories {
         url = "https://mvn.falsepattern.com/releases/"
     }
     maven {
+        name = "FalsePattern Gtmege"
+        url = "https://mvn.falsepattern.com/gtmega_releases/"
+    }
+    maven {
         name = "gt"
         url = "https://gregtech.mechaenetia.com/"
     }
@@ -48,6 +52,7 @@ dependencies {
     compileOnly "com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:0.3.1:dev"
 
     compileOnly "curse.maven:angelica-988067:8884082"
+    compileOnly "mega:fluidlogged-mc1.7.10:0.2.0"
 }
 
 processResources {
