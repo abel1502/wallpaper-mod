@@ -22,7 +22,7 @@ public abstract class MixinRenderBlocks {
     @Unique
     private static HashSet<String> reportedBAClasses = new HashSet<>();
 
-    @Inject(method="getBlockIcon(Lnet/minecraft/block/Block;Lnet/minecraft/world/IBlockAccess;IIII)Lnet/minecraft/util/IIcon;", at=@At("HEAD"))
+    @Inject(method="getBlockIcon(Lnet/minecraft/block/Block;Lnet/minecraft/world/IBlockAccess;IIII)Lnet/minecraft/util/IIcon;", at=@At("HEAD"), cancellable = true)
     private void getBlockIcon(Block block, IBlockAccess blockAccess, int x, int y, int z, int side, CallbackInfoReturnable<IIcon> info) {
         IHasFaceOverride extendedBlockAccess;
         try {

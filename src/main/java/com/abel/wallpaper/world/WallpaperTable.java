@@ -9,7 +9,7 @@ import net.minecraft.util.IIcon;
 public class WallpaperTable {
     public IIcon getWallpaper(int localX, int y, int localZ, int face) {
         // TODO: Temp placeholder, remove!
-        if (localX % 4 == 0 & localZ % 4 == 0) {
+        if (localX % 4 == 0 & localZ % 4 == 0 && face == 2) {
             return Blocks.tnt.getIcon(0, face);
         }
 
@@ -21,5 +21,11 @@ public class WallpaperTable {
         // int idx = y << 11 | localZ << 7 | localX << 3 | face;
         // // TODO
         // return null;
+    }
+
+    // TODO: Pick a subset along the Y axis?
+    public WallpaperTable clone() {
+        // TODO
+        return new WallpaperTable();
     }
 }

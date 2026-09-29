@@ -3,7 +3,7 @@ package com.abel.wallpaper;
 import com.gtnewhorizon.gtnhmixins.ILateMixinLoader;
 import com.gtnewhorizon.gtnhmixins.LateMixin;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -16,10 +16,13 @@ public class LateMixins implements ILateMixinLoader {
 
     @Override
     public List<String> getMixins(Set<String> loadedMods) {
+        ArrayList<String> mixins = new ArrayList<>();
+
         if (loadedMods.contains("angelica")) {
-            return Collections.singletonList("MixinWorldSlice");
+            mixins.add("angelica.MixinClonedChunkSection");
+            mixins.add("angelica.MixinWorldSlice");
         }
 
-        return Collections.emptyList();
+        return mixins;
     }
 }

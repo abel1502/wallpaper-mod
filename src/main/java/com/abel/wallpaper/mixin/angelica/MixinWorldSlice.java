@@ -1,4 +1,4 @@
-package com.abel.wallpaper.mixin;
+package com.abel.wallpaper.mixin.angelica;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -6,13 +6,17 @@ import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.abel.wallpaper.world.IHasFaceOverride;
+import com.abel.wallpaper.world.IHasWallpaperTable;
 import com.abel.wallpaper.world.WallpaperTable;
+import cpw.mods.fml.common.Optional;
 import com.gtnewhorizons.angelica.rendering.celeritas.world.WorldSlice;
 import com.gtnewhorizons.angelica.rendering.celeritas.world.cloned.ChunkRenderContext;
+import com.gtnewhorizons.angelica.rendering.celeritas.world.cloned.ClonedChunkSection;
+import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.IIcon;
@@ -56,9 +60,30 @@ public abstract class MixinWorldSlice implements IHasFaceOverride {
     @Unique
     private WallpaperTable[] wptArrays = new WallpaperTable[TABLE_LENGTH * TABLE_LENGTH];
 
-    @Inject(method = "copyData(Lcom.gtnewhorizons.angelica.rendering.celeritas.world.cloned.ChunkRenderContext;)V", at = @At("TAIL"))
-    public void copyData(ChunkRenderContext context, CallbackInfoReturnable<Void> info) {
-        // TODO: Populate wptArrays!! Here or elsewhere? Probably also in ClonedChunkSection
+    @Inject(
+        method = "copyData",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/gtnewhorizons/angelica/rendering/celeritas/world/WorldSlice;unpackBlockData([Lnet/minecraft/block/Block;[ILcom/gtnewhorizons/angelica/rendering/celeritas/world/cloned/ClonedChunkSection;Lnet/minecraft/world/gen/structure/StructureBoundingBox;)V"
+        ),
+        remap = false
+    )
+    private void copyData_inner(
+        ChunkRenderContext context,
+        CallbackInfo ci,
+        @Local(name = "x") int x,
+        @Local(name = "y") int y,
+        @Local(name = "z") int z,
+        @Local(name = "idx") int idx,
+        @Local ClonedChunkSection section
+    ) {
+        if (y != 0) {
+            return;
+        }
+
+        int wptIdx = getLocalWPTIndex(x, z);
+
+        this.wptArrays[wptIdx] = IHasWallpaperTable.of(section).getWallpaperTable();
     }
 
     @Override

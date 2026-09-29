@@ -10,7 +10,7 @@ build:
 run:
     ./gradlew runClient
 
-deploy TARGET=("D:/Games/PrismLauncher/data/instances/Dev/minecraft/mods"): build
+deploy TARGET=("D:/Games/PrismLauncher/data/instances/Dev/minecraft/mods"):
     $target = "{{TARGET}}"; \
     $lib = (gci ./build/libs | sort LastWriteTime | select -last 1); \
     rm "$target/abel-wallpaper-*.jar"; \
