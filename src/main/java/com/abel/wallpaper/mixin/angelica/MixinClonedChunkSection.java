@@ -35,7 +35,7 @@ public abstract class MixinClonedChunkSection implements IHasWallpaperTable {
         }
 
         // TODO: Maybe trim the unnecessary verticals?
-        this.wpt = wpt.clone();
+        this.wpt = new WallpaperTable(wpt);
     }
 
     @Override

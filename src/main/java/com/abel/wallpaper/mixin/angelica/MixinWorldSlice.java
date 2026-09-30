@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.abel.wallpaper.world.IHasFaceOverride;
 import com.abel.wallpaper.world.IHasWallpaperTable;
 import com.abel.wallpaper.world.WallpaperTable;
-import cpw.mods.fml.common.Optional;
 import com.gtnewhorizons.angelica.rendering.celeritas.world.WorldSlice;
 import com.gtnewhorizons.angelica.rendering.celeritas.world.cloned.ChunkRenderContext;
 import com.gtnewhorizons.angelica.rendering.celeritas.world.cloned.ClonedChunkSection;

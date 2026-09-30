@@ -7,25 +7,41 @@ import net.minecraft.util.IIcon;
  * A lookup table of wallpapers for a chunk (16x256x16).
  */
 public class WallpaperTable {
-    public IIcon getWallpaper(int localX, int y, int localZ, int face) {
-        // TODO: Temp placeholder, remove!
-        if (localX % 4 == 0 & localZ % 4 == 0 && face == 2) {
-            return Blocks.tnt.getIcon(0, face);
-        }
+    private static final int FACE_BITS = 3;
+    private static final int LOCAL_X_BITS = 4;
+    private static final int LOCAL_Z_BITS = 4;
+    private static final int Y_BITS = 8;
+    private static final int IDX_BITS = FACE_BITS + LOCAL_X_BITS + LOCAL_Z_BITS + Y_BITS;
 
-        return null;
+    // An open-addressing hash table
+    // An entry is (value << IDX_BITS | key).
+    // Value is the index into the texture palette.
+    // Key is the local index, containing the face number, local x and z coordinates and the global y coordinate.
+    private int[] hashtable;
 
-        // // Note: optimal order for cache friedliness (render loops on y -> z -> x -> face)
-        // // Should fit in 19 bits
-        // // TODO: constants?
-        // int idx = y << 11 | localZ << 7 | localX << 3 | face;
-        // // TODO
-        // return null;
+    // TODO: Palette.
+    // - Palette entries should have a ref-counter. An unused entry will be replace on next insert.
+    private PaletteEntry[] palette;
+
+    public WallpaperTable() {
+        this.hashtable = null;
+        this.palette = null;
     }
 
-    // TODO: Pick a subset along the Y axis?
-    public WallpaperTable clone() {
+    public WallpaperTable(WallpaperTable other) {
+        this.hashtable = other.hashtable.clone();
+        this.palette = other.palette.clone();
+    }
+
+    public IIcon getWallpaper(int localX, int y, int localZ, int face) {
+        int idx = packIndex(localX, y, localZ, face);
         // TODO
-        return new WallpaperTable();
+        return null;
+    }
+
+    private int packIndex(int localX, int y, int localZ, int face) {
+        // Note: optimal order for cache friedliness (render loops on y -> z -> x -> face)
+        // Though I guess it doesn't matter since we're hashing it anyway
+        return ((y << LOCAL_Z_BITS | localZ) << LOCAL_X_BITS | localX) << FACE_BITS | face;
     }
 }
