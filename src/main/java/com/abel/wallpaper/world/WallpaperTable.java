@@ -3,11 +3,9 @@ package com.abel.wallpaper.world;
 import net.minecraft.block.Block;
 import net.minecraft.util.IIcon;
 
-/**
- * A sparse lookup table of wallpapers for a chunk (16x256x16).
- *
- * The maximum number of distinct palette entries is 2^13 = 8192.
- */
+// TODO: Sync between client and server with ChunkAPI; Save to disk!
+// A sparse lookup table of wallpapers for a chunk (16x256x16).
+// The maximum number of distinct palette entries is 2^13 = 8192.
 public class WallpaperTable {
     private static final int FACE_BITS = 3;
     private static final int LOCAL_X_BITS = 4;
@@ -165,6 +163,7 @@ public class WallpaperTable {
         return true;
     }
 
+    // TODO: Reset wallpapers on destroyed blocks
     // Note: this is also called relatively infrequently, so the performance doesn't matter as much.
     // Returns true if the target face changed.
     public boolean resetWallpaper(

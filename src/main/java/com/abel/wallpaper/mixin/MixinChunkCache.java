@@ -7,7 +7,6 @@ import com.abel.wallpaper.world.IHasFaceOverride;
 import com.abel.wallpaper.world.IHasWallpaperTable;
 import com.abel.wallpaper.world.WallpaperTable;
 
-import net.minecraft.util.IIcon;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.chunk.Chunk;
 
@@ -21,7 +20,7 @@ public abstract class MixinChunkCache implements IHasFaceOverride {
     private Chunk[][] chunkArray;
 
     @Override
-    public IIcon getFaceOverride(int x, int y, int z, int face) {
+    public WallpaperTable getWallpaperTableAt(int x, int y, int z) {
         int chunkX = x >> 4;
         int chunkZ = z >> 4;
         int idxX = chunkX - this.chunkX;
@@ -39,11 +38,6 @@ public abstract class MixinChunkCache implements IHasFaceOverride {
             return null;
         }
 
-        WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
-        if (wpt == null) {
-            return null;
-        }
-
-        return wpt.getWallpaper(x & 15, y, z & 15, face);
+        return IHasWallpaperTable.of(chunk).getWallpaperTable();
     }
 }

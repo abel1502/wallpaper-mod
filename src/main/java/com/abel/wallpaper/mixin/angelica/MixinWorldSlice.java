@@ -18,7 +18,6 @@ import com.gtnewhorizons.angelica.rendering.celeritas.world.cloned.ClonedChunkSe
 import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.util.IIcon;
 
 @Pseudo
 @Mixin(WorldSlice.class)
@@ -86,22 +85,7 @@ public abstract class MixinWorldSlice implements IHasFaceOverride {
     }
 
     @Override
-    public IIcon getFaceOverride(int x, int y, int z, int face) {
-        WallpaperTable wpt = getWPT(x, y, z);
-        if (wpt == null) {
-            return null;
-        }
-
-        return wpt.getWallpaper(x & 15, y, z & 15, face);
-    }
-
-    @Unique
-    private static int getLocalWPTIndex(int sectionX, int sectionZ) {
-        return sectionZ << TABLE_BITS | sectionX;
-    }
-
-    @Unique
-    private WallpaperTable getWPT(int x, int y, int z) {
+    public WallpaperTable getWallpaperTableAt(int x, int y, int z) {
         if (!containsBlock(x, y, z)) {
             return null;
         }
@@ -110,5 +94,10 @@ public abstract class MixinWorldSlice implements IHasFaceOverride {
         int relZ = z - this.baseZ;
 
         return this.wptArrays[getLocalWPTIndex(relX >> 4, relZ >> 4)];
+    }
+
+    @Unique
+    private static int getLocalWPTIndex(int sectionX, int sectionZ) {
+        return sectionZ << TABLE_BITS | sectionX;
     }
 }
