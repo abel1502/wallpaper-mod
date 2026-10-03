@@ -1,7 +1,10 @@
 package com.abel.wallpaper.world;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockAir;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.IntHashMap;
 
 // TODO: Sync between client and server with ChunkAPI; Save to disk!
 // A sparse lookup table of wallpapers for a chunk (16x256x16).
@@ -163,7 +166,6 @@ public class WallpaperTable {
         return true;
     }
 
-    // TODO: Reset wallpapers on destroyed blocks
     // Note: this is also called relatively infrequently, so the performance doesn't matter as much.
     // Returns true if the target face changed.
     public boolean resetWallpaper(
@@ -221,6 +223,22 @@ public class WallpaperTable {
             if (entry != null) {
                 entry.refreshIcon();
             }
+        }
+    }
+
+    public static boolean supportsWallpaper(Block block) {
+        // TODO: ?
+        if (!block.renderAsNormalBlock()) {
+            return false;
+        }
+
+        switch (block.getRenderType()) {
+            case 0:   // Normal
+            case 31:  // Log
+            case 39:  // Quartz
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -368,18 +386,7 @@ public class WallpaperTable {
         return x;
     }
 
-    /**
-     * Searches the palette for an existing matching source texture.
-     *
-     * We scan backwards because insertion is rare and temporal locality
-     * is useful: if the player just started painting with texture X,
-     * another request for X is likely to occur shortly afterward, and X
-     * will usually be near the end of the palette.
-     *
-     * During the same scan we remember the first unused entry so it can
-     * be recycled without growing the palette.
-     */
-    // TODO: Cache the last result and start from it?
+    // Long-term: Cache the last result and start from it?
     private int findOrAllocatePalette(Block block, int meta, int side) {
         if (palette == null) {
             palette = new PaletteEntry[MIN_TABLE_SIZE];

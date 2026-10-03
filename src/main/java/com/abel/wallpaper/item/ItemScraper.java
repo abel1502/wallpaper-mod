@@ -23,24 +23,23 @@ public class ItemScraper extends Item {
         float hitZ
     ) {
         // TODO: Do I need this check?
-        if (world.isRemote) {
-            return true;
-        }
+        // if (world.isRemote) {
+        //     return true;
+        // }
 
         WallpaperTable wpt = IHasFaceOverride.of(world).getWallpaperTableAt(x, y, z);
         if (wpt == null) {
-            return true;
+            return false;
         }
-
-        // TODO: Also get chunk and check the block?
 
         boolean removed = wpt.resetWallpaper(x, y, z, side);
-        if (removed) {
-            // TODO: Sound?
-            // TODO: Mark chunk as dirty? Or I guess fire an "onWallpaperUpdate" somewhere?
-            stack.damageItem(1, player);
+        if (!removed) {
+            return false;
         }
 
+        // TODO: Sound?
+        // TODO: Mark chunk as dirty? Or I guess fire an "onWallpaperUpdate" somewhere?
+        stack.damageItem(1, player);
         return true;
     }
 }

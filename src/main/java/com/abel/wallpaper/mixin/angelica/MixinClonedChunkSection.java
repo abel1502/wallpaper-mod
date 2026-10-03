@@ -34,7 +34,7 @@ public abstract class MixinClonedChunkSection implements IHasWallpaperTable {
             return;
         }
 
-        // TODO: Maybe trim the unnecessary verticals?
+        // Long-term: Maybe trim the unnecessary verticals?
         this.wpt = new WallpaperTable(wpt);
     }
 

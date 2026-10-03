@@ -5,16 +5,16 @@ import net.minecraft.util.IIcon;
 
 public final class PaletteEntry {
     // Cached icon
-    IIcon icon;
+    public IIcon icon;
 
     // Texture source of truth
-    Block block;
-    short blockMeta;
-    short blockSide;
+    public Block block;
+    public short blockMeta;
+    public short blockSide;
 
-    // TODO: Rotation? Would need special support
+    // Long-term: Rotation? Would need special support
 
-    int refCount = 0;
+    public int refCount = 0;
 
     public PaletteEntry(
         Block block,

@@ -29,7 +29,16 @@ public abstract class MixinChunk implements IHasWallpaperTable {
 
     @Inject(method="func_150807_a(IIILnet/minecraft/block/Block;I)Z", at=@At("RETURN"), remap = false)
     private void onSetBlock(int x, int y, int z, Block block, int meta, CallbackInfoReturnable<Boolean> info) {
-        // TODO: Update wallpaper data if the new block cannot support a wallpaper
+        if (!info.getReturnValueZ()) {
+            return;
+        }
+
         // TODO: Maybe only if !world.isRemote?
+
+        if (!WallpaperTable.supportsWallpaper(block)) {
+            for (int face = 0; face < 6; face++) {
+                this.wallpaperData.resetWallpaper(x, y, z, face);
+            }
+        }
     }
 }
