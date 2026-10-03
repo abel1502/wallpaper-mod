@@ -24,9 +24,9 @@ public abstract class MixinRenderBlocks {
 
     @Inject(method="getBlockIcon(Lnet/minecraft/block/Block;Lnet/minecraft/world/IBlockAccess;IIII)Lnet/minecraft/util/IIcon;", at=@At("HEAD"), cancellable = true)
     private void getBlockIcon(Block block, IBlockAccess blockAccess, int x, int y, int z, int side, CallbackInfoReturnable<IIcon> info) {
-        IHasFaceOverride extendedBlockAccess;
+        IHasFaceOverride worldish;
         try {
-            extendedBlockAccess = IHasFaceOverride.of(blockAccess);
+            worldish = IHasFaceOverride.of(blockAccess);
         } catch (ClassCastException e) {
             String className = blockAccess.getClass().getName();
             if (!reportedBAClasses.contains(className)) {
@@ -36,7 +36,7 @@ public abstract class MixinRenderBlocks {
             return;
         }
 
-        IIcon iconOverride = extendedBlockAccess.getFaceOverride(x, y, z, side);
+        IIcon iconOverride = worldish.getFaceOverride(x, y, z, side);
 
         if (iconOverride != null) {
             info.setReturnValue(iconOverride);

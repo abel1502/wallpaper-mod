@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.abel.wallpaper.handler.WallpaperHandler;
 import com.abel.wallpaper.world.IHasWallpaperTable;
 import com.abel.wallpaper.world.WallpaperTable;
 
@@ -35,7 +36,7 @@ public abstract class MixinChunk implements IHasWallpaperTable {
 
         // TODO: Maybe only if !world.isRemote?
 
-        if (!WallpaperTable.supportsWallpaper(block)) {
+        if (!WallpaperHandler.supportsWallpaper(block)) {
             for (int face = 0; face < 6; face++) {
                 this.wallpaperData.resetWallpaper(x, y, z, face);
             }

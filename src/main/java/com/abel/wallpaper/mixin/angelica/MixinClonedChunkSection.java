@@ -1,5 +1,7 @@
 package com.abel.wallpaper.mixin.angelica;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -30,6 +32,7 @@ public abstract class MixinClonedChunkSection implements IHasWallpaperTable {
     @Inject(method = "copyBlockEntities", at = @At("TAIL"), remap = false)
     public void copyBlockEntities(Chunk chunk, ChunkSectionPos pos, CallbackInfo info) {
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
+        LOG.warn("ClonedChunkSection copyBlockEntities wpt={}", wpt);
         if (wpt == null) {
             return;
         }

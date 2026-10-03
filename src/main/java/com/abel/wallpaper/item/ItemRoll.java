@@ -1,11 +1,20 @@
 package com.abel.wallpaper.item;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
+import java.util.List;
+
+import com.abel.wallpaper.handler.WallpaperHandler;
 import com.abel.wallpaper.world.IHasFaceOverride;
 import com.abel.wallpaper.world.PaletteEntry;
 import com.abel.wallpaper.world.WallpaperTable;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -39,7 +48,7 @@ public class ItemRoll extends Item {
 
         PaletteEntry paletteEntry = getPalette(stack);
         if (paletteEntry == null) {
-            if (!WallpaperTable.supportsWallpaper(block)) {
+            if (!WallpaperHandler.supportsWallpaper(block)) {
                 return false;
             }
 
@@ -57,20 +66,33 @@ public class ItemRoll extends Item {
         if (wpt == null) {
             return false;
         }
+        LOG.warn("Roll wpt={} icon={}", wpt, wpt.getWallpaper(x & 15, y, z & 15, side));
 
-        if (!WallpaperTable.supportsWallpaper(block)) {
+        if (!WallpaperHandler.supportsWallpaper(block)) {
             return false;
         }
+        LOG.warn("Roll supports wallpaper");
 
-        boolean changed = wpt.setWallpaper(x, y, z, side, paletteEntry.block, paletteEntry.blockMeta, paletteEntry.blockSide);
+        boolean changed = wpt.setWallpaper(x & 15, y, z & 15, side, paletteEntry.block, paletteEntry.blockMeta, paletteEntry.blockSide);
+        LOG.warn("Roll changed={} icon={}", changed, wpt.getWallpaper(x & 15, y, z & 15, side));
         if (!changed) {
             return false;
         }
 
         // TODO: Sound?
         // TODO: Mark chunk as dirty? Or I guess fire an "onWallpaperUpdate" somewhere?
+        WallpaperHandler.onWallpaperUpdate(world, x, y, z);
         stack.damageItem(1, player);
         return true;
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack stack) {
+        PaletteEntry paletteEntry = getPalette(stack);
+        if (paletteEntry != null) {
+            return super.getItemStackDisplayName(stack) + " (" + paletteEntry.block.getLocalizedName() + ")";
+        }
+        return super.getItemStackDisplayName(stack);
     }
 
     public static boolean hasPalette(ItemStack stack) {

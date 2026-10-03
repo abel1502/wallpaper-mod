@@ -64,9 +64,7 @@ public class WallpaperTable {
     }
 
     public WallpaperTable(WallpaperTable other) {
-        this.hashtable = other.hashtable != null
-            ? other.hashtable.clone()
-            : null;
+        this.hashtable = other.hashtable != null ? other.hashtable.clone() : null;
 
         this.size = other.size;
         this.tombstones = other.tombstones;
@@ -76,9 +74,7 @@ public class WallpaperTable {
 
             for (int i = 0; i < other.paletteSize; ++i) {
                 PaletteEntry entry = other.palette[i];
-                this.palette[i] = entry != null
-                    ? new PaletteEntry(entry)
-                    : null;
+                this.palette[i] = entry != null ? new PaletteEntry(entry) : null;
             }
         } else {
             this.palette = null;
@@ -226,22 +222,6 @@ public class WallpaperTable {
         }
     }
 
-    public static boolean supportsWallpaper(Block block) {
-        // TODO: ?
-        if (!block.renderAsNormalBlock()) {
-            return false;
-        }
-
-        switch (block.getRenderType()) {
-            case 0:   // Normal
-            case 31:  // Log
-            case 39:  // Quartz
-                return true;
-            default:
-                return false;
-        }
-    }
-
     private static int packIndex(int localX, int y, int localZ, int face) {
         // Note: optimal order for cache friedliness (render loops on y -> z -> x -> face)
         // Though I guess it doesn't matter since we're hashing it anyway
@@ -294,7 +274,7 @@ public class WallpaperTable {
             return ~firstTombstone;
         }
 
-        if (slot == firstSlot) {
+        if (slot == firstSlot && table[slot] != EMPTY) {
             throw new IllegalStateException("Wallpaper hash table is completely full");
         }
 
@@ -390,6 +370,7 @@ public class WallpaperTable {
     private int findOrAllocatePalette(Block block, int meta, int side) {
         if (palette == null) {
             palette = new PaletteEntry[MIN_TABLE_SIZE];
+            palette[0] = new PaletteEntry(block, meta, side);
             return 0;
         }
 

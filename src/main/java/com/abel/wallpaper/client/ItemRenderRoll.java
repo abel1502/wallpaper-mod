@@ -8,7 +8,6 @@ import com.abel.wallpaper.world.PaletteEntry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
@@ -23,9 +22,9 @@ public class ItemRenderRoll implements IItemRenderer {
     @Override
     public boolean handleRenderType(ItemStack item, ItemRenderType type) {
         switch (type) {
-            case EQUIPPED:
-            case EQUIPPED_FIRST_PERSON:
-            case ENTITY:
+            // case EQUIPPED:
+            // case EQUIPPED_FIRST_PERSON:
+            // case ENTITY:
             case INVENTORY:
                 return true;
             default:
@@ -44,25 +43,25 @@ public class ItemRenderRoll implements IItemRenderer {
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glEnable(GL11.GL_ALPHA_TEST);
 
-        if (type == ItemRenderType.INVENTORY) {
-            RenderHelper.enableGUIStandardItemLighting();
-            GL11.glTranslated(8, 10, 0);
-            GL11.glRotated(-30, 1, 0, 0);
-            GL11.glRotated(45, 0, 1, 0);
-            GL11.glScaled(-1, -1, -1);
-        } else {
-            if (type != ItemRenderType.ENTITY) {
-                GL11.glTranslated(0.5, 0.25, 0);
-            } else {
-                GL11.glScaled(1.5, 1.5, 1.5);
-            }
+        // if (type == ItemRenderType.INVENTORY) {
+        //     RenderHelper.enableGUIStandardItemLighting();
+        //     GL11.glTranslated(8, 10, 0);
+        //     GL11.glRotated(-30, 1, 0, 0);
+        //     GL11.glRotated(45, 0, 1, 0);
+        //     GL11.glScaled(-1, -1, -1);
+        // } else {
+        //     if (type != ItemRenderType.ENTITY) {
+        //         GL11.glTranslated(0.5, 0.25, 0);
+        //     } else {
+        //         GL11.glScaled(1.5, 1.5, 1.5);
+        //     }
 
-            GL11.glScaled(0.25, 0.25, 0.25);
+        //     GL11.glScaled(0.25, 0.25, 0.25);
 
-            if (type != ItemRenderType.EQUIPPED) {
-                GL11.glRotated(90, 0, 1, 0);
-            }
-        }
+        //     if (type != ItemRenderType.EQUIPPED) {
+        //         GL11.glRotated(90, 0, 1, 0);
+        //     }
+        // }
 
         IIcon baseIcon = stack.getIconIndex();
 
