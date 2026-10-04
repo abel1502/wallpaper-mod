@@ -1,17 +1,27 @@
 package com.abel.wallpaper.handler;
 
+import com.abel.wallpaper.world.IHasFaceOverride;
+import com.abel.wallpaper.world.WallpaperTable;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 // TODO: Singleton?
 public class WallpaperHandler {
+    // Checks if the block can have a wallpaper applied to it
     public static boolean supportsWallpaper(Block block) {
-        // TODO: ?
-        if (!block.renderAsNormalBlock()) {
-            return false;
-        }
+        return isRenderedAsNormalCube(block);
+    }
 
+    // Checks if the block's texture can be used as a wallpaper
+    public static boolean canBeWallpaper(Block block) {
+        // Transparent wallpapers make an x-ray
+        return block.isOpaqueCube() && isRenderedAsNormalCube(block);
+    }
+
+    private static boolean isRenderedAsNormalCube(Block block) {
         switch (block.getRenderType()) {
             case 0:   // Normal
             case 31:  // Log
@@ -23,16 +33,26 @@ public class WallpaperHandler {
     }
 
     public static void onWallpaperUpdate(World world, int x, int y, int z) {
-        // TODO: Null-safety, remove unnecessary calls
-        world.getChunkFromBlockCoords(x, z).setChunkModified();
-        world.markBlockForUpdate(x, y, z);
+        Chunk chunk = world.getChunkFromBlockCoords(x, z);
+        if (chunk != null) {
+            // Should always be the case, but just to be safe
+            world.getChunkFromBlockCoords(x, z).setChunkModified();
+        }
+        
+        // world.markBlockForUpdate(x, y, z);
         // Minecraft.getMinecraft().renderGlobal.markBlockForRenderUpdate(x, y, z);
-        int sectionX = x >> 4;
-        int sectionY = y >> 4;
-        int sectionZ = z >> 4;
+        // world.markBlockRangeForRenderUpdate(x, y, z, x + 1, y + 1, z + 1);
+        int sectionX = x >> 4 << 4;
+        int sectionY = y >> 4 << 4;
+        int sectionZ = z >> 4 << 4;
         world.markBlockRangeForRenderUpdate(
-            sectionX * 16, sectionY * 16, sectionZ * 16,
-            sectionX * 16 + 15, sectionY * 16 + 15, sectionZ * 16 + 15
+            sectionX, sectionY, sectionZ,
+            sectionX + 15, sectionY + 15, sectionZ + 15
         );
+
+        // WallpaperTable wpt = IHasFaceOverride.of(world).getWallpaperTableAt(x, y, z);
+        // if (wpt != null) {
+        //     wpt.debugSignal = true;
+        // }
     }
 }

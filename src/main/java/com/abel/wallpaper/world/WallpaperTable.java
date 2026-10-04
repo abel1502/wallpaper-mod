@@ -1,5 +1,7 @@
 package com.abel.wallpaper.world;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockAir;
 import net.minecraft.init.Blocks;
@@ -86,6 +88,12 @@ public class WallpaperTable {
     // Note: this is called in the rendering pipeline. Should be fast and avoid exceptions.
     // Returns null if there is no wallpaper on the face.
     public IIcon getWallpaper(int localX, int y, int localZ, int face) {
+        PaletteEntry paletteEntry = getWallpaperEntry(localX, y, localZ, face);
+        return paletteEntry != null ? paletteEntry.icon : null;
+    }
+
+    // Note: returns a reference, not a copy. Can be mutated at any time
+    public PaletteEntry getWallpaperEntry(int localX, int y, int localZ, int face) {
         if (hashtable == null) {
             return null;
         }
@@ -100,8 +108,7 @@ public class WallpaperTable {
         int entry = hashtable[result];
         int paletteIndex = entry >>> IDX_BITS;
 
-        PaletteEntry paletteEntry = palette[paletteIndex];
-        return paletteEntry != null ? paletteEntry.icon : null;
+        return palette[paletteIndex];
     }
 
     // Note: this is called relatively infrequently, so the performance doesn't matter as much.
@@ -160,6 +167,19 @@ public class WallpaperTable {
         }
 
         return true;
+    }
+
+    public boolean setWallpaperEntry(
+        int localX,
+        int y,
+        int localZ,
+        int face,
+        PaletteEntry paletteEntry
+    ) {
+        if (paletteEntry == null) {
+            return resetWallpaper(localX, y, localZ, face);
+        }
+        return setWallpaper(localX, y, localZ, face, paletteEntry.block, paletteEntry.blockMeta, paletteEntry.blockSide);
     }
 
     // Note: this is also called relatively infrequently, so the performance doesn't matter as much.
@@ -371,6 +391,7 @@ public class WallpaperTable {
         if (palette == null) {
             palette = new PaletteEntry[MIN_TABLE_SIZE];
             palette[0] = new PaletteEntry(block, meta, side);
+            paletteSize = 1;
             return 0;
         }
 

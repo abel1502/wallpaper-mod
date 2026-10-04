@@ -39,6 +39,7 @@ public abstract class MixinChunk implements IHasWallpaperTable {
         if (!WallpaperHandler.supportsWallpaper(block)) {
             for (int face = 0; face < 6; face++) {
                 this.wallpaperData.resetWallpaper(x, y, z, face);
+                WallpaperHandler.onWallpaperUpdate(worldObj, x, y, z);
             }
         }
     }

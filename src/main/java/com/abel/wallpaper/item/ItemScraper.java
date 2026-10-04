@@ -35,10 +35,10 @@ public class ItemScraper extends Item {
         if (wpt == null) {
             return false;
         }
-        LOG.warn("Scraper wpt={} icon={}", wpt, wpt.getWallpaper(x & 15, y, z & 15, side));
+        // LOG.warn("Scraper wpt={} icon={}", wpt, wpt.getWallpaper(x & 15, y, z & 15, side));
 
         boolean removed = wpt.resetWallpaper(x & 15, y, z & 15, side);
-        LOG.warn("Scraper removed={} icon={}", removed, wpt.getWallpaper(x & 15, y, z & 15, side));
+        // LOG.warn("Scraper removed={} icon={}", removed, wpt.getWallpaper(x & 15, y, z & 15, side));
         if (!removed) {
             return false;
         }

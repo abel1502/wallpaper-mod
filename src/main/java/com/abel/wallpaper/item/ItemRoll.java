@@ -21,6 +21,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
+// TODO: Two different base icons -- white for blank, colored for imprinted
 public class ItemRoll extends Item {
     @Override
     public boolean onItemUse(
@@ -40,7 +41,6 @@ public class ItemRoll extends Item {
         //     return true;
         // }
 
-        
         Block block = world.getBlock(x, y, z);
         if (block == null) {
             return false;
@@ -48,17 +48,24 @@ public class ItemRoll extends Item {
 
         PaletteEntry paletteEntry = getPalette(stack);
         if (paletteEntry == null) {
-            if (!WallpaperHandler.supportsWallpaper(block)) {
+            if (!WallpaperHandler.canBeWallpaper(block)) {
                 return false;
+            }
+
+            WallpaperTable wpt = IHasFaceOverride.of(world).getWallpaperTableAt(x, y, z);
+            if (wpt != null) {
+                paletteEntry = wpt.getWallpaperEntry(x & 15, y, z & 15, side);  // Long-term: wrappers that do & 15 in IHasFaceOverride for all relevant methods
+                if (paletteEntry != null) {
+                    setPalette(stack, new PaletteEntry(paletteEntry));
+                    return true;
+                }
             }
 
             int meta = world.getBlockMetadata(x, y, z);
 
             paletteEntry = new PaletteEntry(block, meta, side);
             setPalette(stack, paletteEntry);
-
             // TODO: ?
-
             return true;
         }
 
@@ -66,15 +73,15 @@ public class ItemRoll extends Item {
         if (wpt == null) {
             return false;
         }
-        LOG.warn("Roll wpt={} icon={}", wpt, wpt.getWallpaper(x & 15, y, z & 15, side));
+        // LOG.warn("Roll wpt={} icon={}", wpt, wpt.getWallpaper(x & 15, y, z & 15, side));
 
         if (!WallpaperHandler.supportsWallpaper(block)) {
             return false;
         }
-        LOG.warn("Roll supports wallpaper");
+        // LOG.warn("Roll supports wallpaper");
 
-        boolean changed = wpt.setWallpaper(x & 15, y, z & 15, side, paletteEntry.block, paletteEntry.blockMeta, paletteEntry.blockSide);
-        LOG.warn("Roll changed={} icon={}", changed, wpt.getWallpaper(x & 15, y, z & 15, side));
+        boolean changed = wpt.setWallpaperEntry(x & 15, y, z & 15, side, paletteEntry);
+        // LOG.warn("Roll changed={} icon={}", changed, wpt.getWallpaper(x & 15, y, z & 15, side));
         if (!changed) {
             return false;
         }

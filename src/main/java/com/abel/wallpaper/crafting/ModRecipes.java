@@ -24,5 +24,7 @@ public class ModRecipes {
             'P', Items.paper,
             'S', Items.string
         );
+
+        // TODO: Recipe for clearing a roll (should keep the durability but remove nbt)
     }
 }

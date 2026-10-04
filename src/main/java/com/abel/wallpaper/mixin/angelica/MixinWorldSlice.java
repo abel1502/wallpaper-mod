@@ -1,5 +1,7 @@
 package com.abel.wallpaper.mixin.angelica;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -79,9 +81,7 @@ public abstract class MixinWorldSlice implements IHasFaceOverride {
             return;
         }
 
-        int wptIdx = getLocalWPTIndex(x, z);
-
-        this.wptArrays[wptIdx] = IHasWallpaperTable.of(section).getWallpaperTable();
+        this.wptArrays[getLocalWPTIndex(x, z)] = IHasWallpaperTable.of(section).getWallpaperTable();
     }
 
     @Override
