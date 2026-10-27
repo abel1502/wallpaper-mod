@@ -73,7 +73,7 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void cloneChunk(Chunk from, Chunk to) {
-        LOG.warn("[ABEL] WallpaperDataManager.cloneChunk from.x={} from.z={} to.x={} to.z={} world.isRemote={}", from.xPosition, from.zPosition, to.xPosition, to.zPosition, from.worldObj.isRemote);
+        LOG.debug("[ABEL] WallpaperDataManager.cloneChunk from.x={} from.z={} to.x={} to.z={} world.isRemote={}", from.xPosition, from.zPosition, to.xPosition, to.zPosition, from.worldObj.isRemote);
         IHasWallpaperTable.of(to).setWallpaperTable(IHasWallpaperTable.of(from).getWallpaperTable());
     }
 
@@ -84,7 +84,7 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void writeToBuffer(Chunk chunk, int subChunkMask, boolean forceUpdate, ByteBuffer buffer) {
-        LOG.info("[ABEL] WallpaperDataManager.writeToBuffer chunk.x={} chunk.z={} world.isRemote={} forceUpdate={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote, forceUpdate);
+        LOG.debug("[ABEL] WallpaperDataManager.writeToBuffer chunk.x={} chunk.z={} world.isRemote={} forceUpdate={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote, forceUpdate);
 
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
         if (wpt == null) {
@@ -96,7 +96,7 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void readFromBuffer(Chunk chunk, int subChunkMask, boolean forceUpdate, ByteBuffer buffer) {
-        LOG.info("[ABEL] WallpaperDataManager.readFromBuffer chunk.x={} chunk.z={} world.isRemote={} forceUpdate={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote, forceUpdate);
+        LOG.debug("[ABEL] WallpaperDataManager.readFromBuffer chunk.x={} chunk.z={} world.isRemote={} forceUpdate={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote, forceUpdate);
 
         WallpaperTable wpt;
         if (buffer.hasRemaining()) {
@@ -113,13 +113,19 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
         IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
 
         if (chunk.worldObj.isRemote) {
-            WallpaperHandler.onWallpaperUpdate(chunk.worldObj, chunk.xPosition << 4, 0, chunk.zPosition << 4);
+            int sectionX = chunk.xPosition << 4;
+            int sectionZ = chunk.xPosition << 4;
+            chunk.worldObj.markBlockRangeForRenderUpdate(
+                sectionX, 0, sectionZ,
+                sectionX + 15, 255, sectionZ + 15
+            );
+            // WallpaperHandler.onWallpaperUpdate(chunk.worldObj, chunk.xPosition << 4, 0, chunk.zPosition << 4);
         }
     }
 
     @Override
     public void writeBlockToPacket(Chunk chunk, int x, int y, int z, S23PacketBlockChange packet) {
-        LOG.warn("[ABEL] WallpaperDataManager.writeBlockToPacket x={} y={} z={} world.isRemote={}", x, y, z, chunk.worldObj.isRemote);
+        LOG.debug("[ABEL] WallpaperDataManager.writeBlockToPacket x={} y={} z={} world.isRemote={}", x, y, z, chunk.worldObj.isRemote);
         // Note: x and z are local
 
         IBlockPacket myPacket = (IBlockPacket)packet;
@@ -134,6 +140,8 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
             return;
         }
 
+        LOG.debug("[ABEL] (WallpaperDataManager.readBlockFromPacket) faceWallpapers=[{} {} {} {} {} {}]", faceWallpapers[0], faceWallpapers[1], faceWallpapers[2], faceWallpapers[3], faceWallpapers[4], faceWallpapers[5]);
+
         for (int face = 0; face < 6; face++) {
             faceWallpapers[face] = wpt.getWallpaperEntry(x, y, z, face);
         }
@@ -141,11 +149,13 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void readBlockFromPacket(Chunk chunk, int x, int y, int z, S23PacketBlockChange packet) {
-        LOG.warn("[ABEL] WallpaperDataManager.readBlockFromPacket x={} y={} z={} world.isRemote={}", x, y, z, chunk.worldObj.isRemote);
+        LOG.debug("[ABEL] WallpaperDataManager.readBlockFromPacket x={} y={} z={} world.isRemote={}", x, y, z, chunk.worldObj.isRemote);
         // Note: x and z are local
 
         IBlockPacket myPacket = (IBlockPacket)packet;
         PaletteEntry[] faceWallpapers = myPacket.abel$getFaceWallpapers();
+
+        LOG.debug("[ABEL] (WallpaperDataManager.readBlockFromPacket) faceWallpapers=[{} {} {} {} {} {}]", faceWallpapers[0], faceWallpapers[1], faceWallpapers[2], faceWallpapers[3], faceWallpapers[4], faceWallpapers[5]);
 
         boolean hasWallpaper = false;
         for (int face = 0; face < 6; face++) {
@@ -157,6 +167,7 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
         if (wpt == null) {
+            LOG.debug("[ABEL] (WallpaperDataManager.readBlockFromPacket) wpt=null hasWallpaper={}", hasWallpaper);
             if (!hasWallpaper) {
                 return;
             }
@@ -164,6 +175,8 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
             wpt = new WallpaperTable();
             IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
         }
+
+        LOG.debug("[ABEL] (WallpaperDataManager.readBlockFromPacket) wpt={} faceWallpapers=[{} {} {} {} {} {}]", wpt, faceWallpapers[0], faceWallpapers[1], faceWallpapers[2], faceWallpapers[3], faceWallpapers[4], faceWallpapers[5]);
 
         boolean changed = false;
         for (int face = 0; face < 6; face++) {
@@ -173,17 +186,29 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
         if (wpt.empty()) {
             IHasWallpaperTable.of(chunk).setWallpaperTable(null);
+            wpt = null;
         }
 
         if (changed) {
-            WallpaperHandler.onWallpaperUpdate(chunk.worldObj, x, y, z);
+            int sectionX = chunk.xPosition << 4;
+            int sectionY = y >> 4 << 4;
+            int sectionZ = chunk.zPosition << 4;
+            chunk.worldObj.markBlockRangeForRenderUpdate(
+                sectionX, sectionY, sectionZ,
+                sectionX + 15, sectionY + 15, sectionZ + 15
+            );
+            // WallpaperHandler.onWallpaperUpdate(chunk.worldObj, x, y, z);
         }
     }
 
     @Override
     public void writeBlockPacketToBuffer(S23PacketBlockChange packet, PacketBuffer buffer) throws IOException {
+        LOG.debug("[ABEL] WallpaperDataManager.writeBlockPacketToBuffer");
+
         IBlockPacket myPacket = (IBlockPacket)packet;
         PaletteEntry[] faceWallpapers = myPacket.abel$getFaceWallpapers();
+
+        LOG.debug("[ABEL] (WallpaperDataManager.writeBlockPacketToBuffer) faceWallpapers=[{} {} {} {} {} {}]", faceWallpapers[0], faceWallpapers[1], faceWallpapers[2], faceWallpapers[3], faceWallpapers[4], faceWallpapers[5]);
 
         short mask = 0;
         for (int face = 0; face < 6; face++) {
@@ -202,8 +227,12 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void readBlockPacketFromBuffer(S23PacketBlockChange packet, PacketBuffer buffer) throws IOException {
+        LOG.debug("[ABEL] WallpaperDataManager.readBlockPacketFromBuffer");
+
         IBlockPacket myPacket = (IBlockPacket)packet;
         PaletteEntry[] faceWallpapers = myPacket.abel$getFaceWallpapers();
+
+        LOG.debug("[ABEL] (WallpaperDataManager.readBlockPacketFromBuffer) faceWallpapers=[{} {} {} {} {} {}]", faceWallpapers[0], faceWallpapers[1], faceWallpapers[2], faceWallpapers[3], faceWallpapers[4], faceWallpapers[5]);
 
         short mask = buffer.readShort();
         for (int face = 0; face < 6; face++) {

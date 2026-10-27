@@ -44,15 +44,21 @@ public abstract class MixinChunk implements IHasWallpaperTable {
             return;
         }
 
+        if (wallpaperData == null) {
+            return;
+        }
+
         if (!WallpaperHandler.supportsWallpaper(block)) {
-            boolean changed = false;
+            // boolean changed = false;
             for (int face = 0; face < 6; face++) {
-                changed |= this.wallpaperData.resetWallpaper(x, y, z, face);
+                /*changed |= */this.wallpaperData.resetWallpaper(x, y, z, face);
             }
 
-            if (changed) {
-                WallpaperHandler.onWallpaperUpdate(worldObj, x, y, z);
-            }
+            // if (changed) {
+            //     // Bad -- local coordinates!!
+            //     worldObj.markBlockForUpdate(x, y, z);
+            //     // WallpaperHandler.onWallpaperUpdate(worldObj, x, y, z);
+            // }
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.abel.wallpaper.mixin;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -39,5 +41,11 @@ public abstract class MixinChunkCache implements IHasFaceOverride {
         }
 
         return IHasWallpaperTable.of(chunk).getWallpaperTable();
+    }
+
+    @Override
+    public void setLocalWallpaperTable(int x, int y, int z, WallpaperTable wpt) {
+        LOG.error("[ABEL] MixinChunkCache.setLocalWallpaperTable called unexpectedly");
+        throw new UnsupportedOperationException("MixinChunkCache.setLocalWallpaperTable");
     }
 }

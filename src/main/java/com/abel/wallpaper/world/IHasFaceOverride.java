@@ -7,6 +7,8 @@ import net.minecraft.world.IBlockAccess;
 public interface IHasFaceOverride extends IBlockAccess {
     WallpaperTable getLocalWallpaperTable(int x, int y, int z);
 
+    void setLocalWallpaperTable(int x, int y, int z, WallpaperTable wpt);
+
     default IIcon getWallpaper(int x, int y, int z, int face) {
         WallpaperTable wpt = getLocalWallpaperTable(x, y, z);
         if (wpt == null) {
@@ -28,7 +30,8 @@ public interface IHasFaceOverride extends IBlockAccess {
     default boolean setWallpaper(int x, int y, int z, int face, Block sourceBlock, int sourceMeta, int sourceSide) {
         WallpaperTable wpt = getLocalWallpaperTable(x, y, z);
         if (wpt == null) {
-            return false;
+            wpt = new WallpaperTable();
+            setLocalWallpaperTable(x, y, z, wpt);
         }
 
         return wpt.setWallpaper(x & 15, y, z & 15, face, sourceBlock, sourceMeta, sourceSide);
@@ -37,7 +40,8 @@ public interface IHasFaceOverride extends IBlockAccess {
     default boolean setWallpaperEntry(int x, int y, int z, int face, PaletteEntry paletteEntry) {
         WallpaperTable wpt = getLocalWallpaperTable(x, y, z);
         if (wpt == null) {
-            return false;
+            wpt = new WallpaperTable();
+            setLocalWallpaperTable(x, y, z, wpt);
         }
 
         return wpt.setWallpaperEntry(x & 15, y, z & 15, face, paletteEntry);

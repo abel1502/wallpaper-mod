@@ -32,7 +32,6 @@ public abstract class MixinClonedChunkSection implements IHasWallpaperTable {
     @Inject(method = "copyBlockEntities", at = @At("TAIL"), remap = false)
     public void copyBlockEntities(Chunk chunk, ChunkSectionPos pos, CallbackInfo info) {
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
-        // LOG.warn("ClonedChunkSection copyBlockEntities wpt={}", wpt);
         if (wpt == null) {
             this.wpt = null;
             return;

@@ -12,6 +12,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 // TODO: Two different base icons -- white for blank, colored for imprinted
 public class ItemRoll extends Item {
@@ -71,9 +72,16 @@ public class ItemRoll extends Item {
         }
 
         // TODO: Sound?
-        LOG.warn("[ABEL] ItemRoll.onItemUse x={} y={} z={} side={}", x, y, z, side);
+        LOG.debug("[ABEL] ItemRoll.onItemUse x={} y={} z={} side={}", x, y, z, side);
         world.markBlockForUpdate(x, y, z);
-        WallpaperHandler.onWallpaperUpdate(world, x, y, z);
+
+        Chunk chunk = world.getChunkFromBlockCoords(x, z);
+        if (chunk != null) {
+            // Should always be the case, but just to be safe
+            chunk.setChunkModified();
+        }
+        // WallpaperHandler.onWallpaperUpdate(world, x, y, z);
+
         stack.damageItem(1, player);
         return true;
     }

@@ -100,4 +100,10 @@ public abstract class MixinWorldSlice implements IHasFaceOverride {
     private static int getLocalWPTIndex(int sectionX, int sectionZ) {
         return sectionZ << TABLE_BITS | sectionX;
     }
+
+    @Override
+    public void setLocalWallpaperTable(int x, int y, int z, WallpaperTable wpt) {
+        LOG.error("[ABEL] MixinWorldSlice.setLocalWallpaperTable called unexpectedly");
+        throw new UnsupportedOperationException("MixinWorldSlice.setLocalWallpaperTable");
+    }
 }

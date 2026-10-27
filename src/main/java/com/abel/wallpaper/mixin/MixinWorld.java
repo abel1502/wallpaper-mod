@@ -26,4 +26,14 @@ public abstract class MixinWorld implements IHasFaceOverride {
 
         return wpt;
     }
+
+    @Override
+    public void setLocalWallpaperTable(int x, int y, int z, WallpaperTable wpt) {
+        Chunk chunk = this.getChunkFromBlockCoords(x, z);
+        if (chunk == null) {
+            throw new RuntimeException("Chunk not found at " + x + ", " + z);
+        }
+
+        IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
+    }
 }

@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 public class ItemScraper extends Item {
     @Override
@@ -34,9 +35,16 @@ public class ItemScraper extends Item {
         }
 
         // TODO: Sound?
-        LOG.warn("[ABEL] ItemScraper.onItemUse x={} y={} z={} side={}", x, y, z, side);
+        LOG.debug("[ABEL] ItemScraper.onItemUse x={} y={} z={} side={}", x, y, z, side);
         world.markBlockForUpdate(x, y, z);
-        WallpaperHandler.onWallpaperUpdate(world, x, y, z);
+
+        Chunk chunk = world.getChunkFromBlockCoords(x, z);
+        if (chunk != null) {
+            // Should always be the case, but just to be safe
+            chunk.setChunkModified();
+        }
+        // WallpaperHandler.onWallpaperUpdate(world, x, y, z);
+
         stack.damageItem(1, player);
         return true;
     }

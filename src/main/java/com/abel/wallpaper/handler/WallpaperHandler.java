@@ -31,26 +31,24 @@ public class WallpaperHandler {
     }
 
     // TODO: Separate visual update (should trigger a re-render) and source-of-truth update (should propagate the change to clients by marking the block for update, and the chunk as dirty)?
-    public static void onWallpaperUpdate(World world, int x, int y, int z) {
-        LOG.warn("[ABEL] WallpaperHandler.onWallpaperUpdate x={} y={} z={} world.isRemote={}", x, y, z, world.isRemote);
+    // public static void onWallpaperUpdate(World world, int x, int y, int z) {
+    //     LOG.warn("[ABEL] WallpaperHandler.onWallpaperUpdate x={} y={} z={} world.isRemote={}", x, y, z, world.isRemote);
 
-        if (!world.isRemote) {
-            Chunk chunk = world.getChunkFromBlockCoords(x, z);
-            if (chunk != null) {
-                // Should always be the case, but just to be safe
-                world.getChunkFromBlockCoords(x, z).setChunkModified();
-            }
-        }
-        
-        // world.markBlockForUpdate(x, y, z);
-        // Minecraft.getMinecraft().renderGlobal.markBlockForRenderUpdate(x, y, z);
-        // world.markBlockRangeForRenderUpdate(x, y, z, x + 1, y + 1, z + 1);
-        int sectionX = x >> 4 << 4;
-        int sectionY = y >> 4 << 4;
-        int sectionZ = z >> 4 << 4;
-        world.markBlockRangeForRenderUpdate(
-            sectionX, sectionY, sectionZ,
-            sectionX + 15, sectionY + 15, sectionZ + 15
-        );
-    }
+    //     // Chunk chunk = world.getChunkFromBlockCoords(x, z);
+    //     // if (chunk != null) {
+    //     //     // Should always be the case, but just to be safe
+    //     //     chunk.setChunkModified();
+    //     // }
+
+    //     // world.markBlockForUpdate(x, y, z);
+    //     // Minecraft.getMinecraft().renderGlobal.markBlockForRenderUpdate(x, y, z);
+    //     // world.markBlockRangeForRenderUpdate(x, y, z, x + 1, y + 1, z + 1);
+    //     int sectionX = x >> 4 << 4;
+    //     int sectionY = y >> 4 << 4;
+    //     int sectionZ = z >> 4 << 4;
+    //     world.markBlockRangeForRenderUpdate(
+    //         sectionX, sectionY, sectionZ,
+    //         sectionX + 15, sectionY + 15, sectionZ + 15
+    //     );
+    // }
 }
