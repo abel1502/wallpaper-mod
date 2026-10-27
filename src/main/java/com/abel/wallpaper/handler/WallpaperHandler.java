@@ -30,7 +30,6 @@ public class WallpaperHandler {
         }
     }
 
-    // TODO: Separate visual update (should trigger a re-render) and source-of-truth update (should propagate the change to clients by marking the block for update, and the chunk as dirty)?
     // public static void onWallpaperUpdate(World world, int x, int y, int z) {
     //     LOG.warn("[ABEL] WallpaperHandler.onWallpaperUpdate x={} y={} z={} world.isRemote={}", x, y, z, world.isRemote);
 

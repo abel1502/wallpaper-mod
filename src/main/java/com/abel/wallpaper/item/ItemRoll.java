@@ -54,7 +54,6 @@ public class ItemRoll extends Item {
 
             paletteEntry = new PaletteEntry(block, meta, side);
             setPalette(stack, paletteEntry);
-            // TODO: ?
             return true;
         }
 

@@ -348,7 +348,6 @@ public class WallpaperTable {
             return;
         }
 
-        // TODO: Do I need this here?
         if (tombstones > capacity / 4) {
             rehash(capacity);
         }

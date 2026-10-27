@@ -25,6 +25,8 @@ public class ModRecipes {
             'S', Items.string
         );
 
-        // TODO: Recipe for clearing a roll (should keep the durability but remove nbt)
+        GameRegistry.addRecipe(
+            new ClearNBTRecipe(ModItems.roll)
+        );
     }
 }
