@@ -5,6 +5,7 @@ import static com.abel.wallpaper.WallpaperMod.LOG;
 import java.util.HashSet;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,8 +23,16 @@ public abstract class MixinRenderBlocks {
     @Unique
     private static HashSet<String> reportedBAClasses = new HashSet<>();
 
+    @Shadow
+    public abstract boolean hasOverrideBlockTexture();
+
     @Inject(method="getBlockIcon(Lnet/minecraft/block/Block;Lnet/minecraft/world/IBlockAccess;IIII)Lnet/minecraft/util/IIcon;", at=@At("HEAD"), cancellable = true)
     private void getBlockIcon(Block block, IBlockAccess blockAccess, int x, int y, int z, int side, CallbackInfoReturnable<IIcon> info) {
+        if (hasOverrideBlockTexture()) {
+            // Don't apply wallpapers over explicit texture overrides
+            return;
+        }
+
         IHasFaceOverride worldish;
         try {
             worldish = IHasFaceOverride.of(blockAccess);

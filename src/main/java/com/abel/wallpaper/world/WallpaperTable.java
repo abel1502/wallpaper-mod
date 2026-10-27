@@ -255,7 +255,7 @@ public class WallpaperTable {
     private static int packIndex(int localX, int y, int localZ, int face) {
         // Note: optimal order for cache friedliness (render loops on y -> z -> x -> face)
         // Though I guess it doesn't matter since we're hashing it anyway
-        return ((y << LOCAL_Z_BITS | localZ) << LOCAL_X_BITS | localX) << FACE_BITS | face;
+        return (((y & 0xFF) << LOCAL_Z_BITS | localZ) << LOCAL_X_BITS | localX) << FACE_BITS | face;
     }
 
     private static int makeEntry(int key, int paletteIndex) {

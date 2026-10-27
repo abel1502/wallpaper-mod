@@ -53,6 +53,7 @@ public interface IHasFaceOverride extends IBlockAccess {
     }
 
     // TODO: refreshIcons?
+    // TODO: Then also call refreshIcons somewhere!
 
     static IHasFaceOverride of(IBlockAccess blockAccess) {
         return (IHasFaceOverride)blockAccess;

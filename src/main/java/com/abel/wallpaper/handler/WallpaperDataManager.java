@@ -66,7 +66,7 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void cloneChunk(Chunk from, Chunk to) {
-        IHasWallpaperTable.of(to).setWallpaperTable(IHasWallpaperTable.of(to).getWallpaperTable());
+        IHasWallpaperTable.of(to).setWallpaperTable(IHasWallpaperTable.of(from).getWallpaperTable());
     }
 
     @Override
@@ -130,6 +130,10 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
         for (int face = 0; face < 6; face++) {
             wpt.setWallpaperEntry(x, y, z, face, faceWallpapers[face]);
             // Note: no render updates scheduled here. Render update should happen due to the block update in the first place, right?
+        }
+
+        if (wpt.empty()) {
+            IHasWallpaperTable.of(chunk).setWallpaperTable(null);
         }
     }
 

@@ -94,14 +94,11 @@ public class ItemRoll extends Item {
         }
 
         NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null) {
+        if (tag == null || !tag.hasKey("palette", 10)) {
             return null;
         }
 
         tag = tag.getCompoundTag("palette");
-        if (tag == null) {
-            return null;
-        }
 
         PaletteEntry paletteEntry = new PaletteEntry();
         paletteEntry.readFromNBT(tag);

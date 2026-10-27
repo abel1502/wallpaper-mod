@@ -32,6 +32,7 @@ public class ItemScraper extends Item {
         }
 
         // TODO: Sound?
+        world.markBlockForUpdate(x, y, z);
         WallpaperHandler.onWallpaperUpdate(world, x, y, z);
         stack.damageItem(1, player);
         return true;
