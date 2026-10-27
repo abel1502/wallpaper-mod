@@ -20,7 +20,7 @@ public abstract class MixinChunkCache implements IHasFaceOverride {
     private Chunk[][] chunkArray;
 
     @Override
-    public WallpaperTable getWallpaperTableAt(int x, int y, int z) {
+    public WallpaperTable getLocalWallpaperTable(int x, int y, int z) {
         int chunkX = x >> 4;
         int chunkZ = z >> 4;
         int idxX = chunkX - this.chunkX;

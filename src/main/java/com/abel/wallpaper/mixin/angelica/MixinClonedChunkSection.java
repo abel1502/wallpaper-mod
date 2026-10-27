@@ -46,4 +46,9 @@ public abstract class MixinClonedChunkSection implements IHasWallpaperTable {
     public WallpaperTable getWallpaperTable() {
         return this.wpt;
     }
+
+    @Override
+    public void setWallpaperTable(WallpaperTable wpt) {
+        this.wpt = wpt;
+    }
 }

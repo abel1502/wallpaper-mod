@@ -16,7 +16,7 @@ public abstract class MixinWorld implements IHasFaceOverride {
     public abstract Chunk getChunkFromBlockCoords(int x, int z);
 
     @Override
-    public WallpaperTable getWallpaperTableAt(int x, int y, int z) {
+    public WallpaperTable getLocalWallpaperTable(int x, int y, int z) {
         Chunk chunk = this.getChunkFromBlockCoords(x, z);
         if (chunk == null) {
             return null;

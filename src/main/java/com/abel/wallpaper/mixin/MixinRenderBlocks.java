@@ -36,7 +36,7 @@ public abstract class MixinRenderBlocks {
             return;
         }
 
-        IIcon iconOverride = worldish.getFaceOverride(x, y, z, side);
+        IIcon iconOverride = worldish.getWallpaper(x, y, z, side);
 
         if (iconOverride != null) {
             info.setReturnValue(iconOverride);

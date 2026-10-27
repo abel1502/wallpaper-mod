@@ -1,14 +1,10 @@
 package com.abel.wallpaper.handler;
 
-import com.abel.wallpaper.world.IHasFaceOverride;
-import com.abel.wallpaper.world.WallpaperTable;
-
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
-// TODO: Singleton?
+// Long-term: Singleton?
 public class WallpaperHandler {
     // Checks if the block can have a wallpaper applied to it
     public static boolean supportsWallpaper(Block block) {
@@ -32,6 +28,7 @@ public class WallpaperHandler {
         }
     }
 
+    // TODO: Separate visual update (should trigger a re-render) and source-of-truth update (should propagate the change to clients by marking the block for update, and the chunk as dirty)?
     public static void onWallpaperUpdate(World world, int x, int y, int z) {
         Chunk chunk = world.getChunkFromBlockCoords(x, z);
         if (chunk != null) {
@@ -49,10 +46,5 @@ public class WallpaperHandler {
             sectionX, sectionY, sectionZ,
             sectionX + 15, sectionY + 15, sectionZ + 15
         );
-
-        // WallpaperTable wpt = IHasFaceOverride.of(world).getWallpaperTableAt(x, y, z);
-        // if (wpt != null) {
-        //     wpt.debugSignal = true;
-        // }
     }
 }

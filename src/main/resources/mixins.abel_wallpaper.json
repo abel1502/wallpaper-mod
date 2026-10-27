@@ -8,6 +8,7 @@
         "MixinChunk",
         "MixinChunkCache",
         "MixinRenderBlocks",
+        "MixinS23PacketBlockChange",
         "MixinWorld"
     ]
 }

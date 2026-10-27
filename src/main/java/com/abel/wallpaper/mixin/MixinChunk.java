@@ -28,13 +28,21 @@ public abstract class MixinChunk implements IHasWallpaperTable {
         return this.wallpaperData;
     }
 
+    @Override
+    public void setWallpaperTable(WallpaperTable wpt) {
+        this.wallpaperData = wpt;
+    }
+
     @Inject(method="func_150807_a(IIILnet/minecraft/block/Block;I)Z", at=@At("RETURN"), remap = false)
     private void onSetBlock(int x, int y, int z, Block block, int meta, CallbackInfoReturnable<Boolean> info) {
         if (!info.getReturnValueZ()) {
             return;
         }
 
-        // TODO: Maybe only if !world.isRemote?
+        // TODO: Maybe run on client-side too?
+        if (worldObj.isRemote) {
+            return;
+        }
 
         if (!WallpaperHandler.supportsWallpaper(block)) {
             for (int face = 0; face < 6; face++) {

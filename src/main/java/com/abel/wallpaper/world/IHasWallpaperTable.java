@@ -9,6 +9,8 @@ import net.minecraft.world.chunk.Chunk;
 public interface IHasWallpaperTable {
     WallpaperTable getWallpaperTable();
 
+    void setWallpaperTable(WallpaperTable wpt);
+
     static IHasWallpaperTable of(Chunk chunk) {
         return (IHasWallpaperTable)chunk;
     }

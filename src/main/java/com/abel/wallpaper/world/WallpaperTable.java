@@ -1,14 +1,13 @@
 package com.abel.wallpaper.world;
 
-import static com.abel.wallpaper.WallpaperMod.LOG;
+import java.nio.ByteBuffer;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockAir;
-import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.IIcon;
-import net.minecraft.util.IntHashMap;
 
-// TODO: Sync between client and server with ChunkAPI; Save to disk!
 // A sparse lookup table of wallpapers for a chunk (16x256x16).
 // The maximum number of distinct palette entries is 2^13 = 8192.
 public class WallpaperTable {
@@ -39,10 +38,13 @@ public class WallpaperTable {
     private static final int SHRINK_NUMERATOR = 1;
     private static final int SHRINK_DENOMINATOR = 4;
 
+    // Higher than the actual max number of faces, used for max packet size
+    private static final int MAX_HASHTABLE_ENTRIES = 1 << IDX_BITS;
+
     // An open-addressing hash table
     // An entry is (value << IDX_BITS | key).
     // Value is the index into the texture palette.
-    // Key is the local index, containing the face number, local x and z coordinates and the global y coordinate, +1; or EMPTY or TOMBSTONE.
+    // Key is the local index (containing the face number, local x and z coordinates and the global y coordinate) +1; or EMPTY or TOMBSTONE.
     private int[] hashtable;
 
     // Number of live entries in the hash table.
@@ -57,12 +59,7 @@ public class WallpaperTable {
     private int paletteSize;
 
     public WallpaperTable() {
-        hashtable = null;
-        size = 0;
-        tombstones = 0;
-
-        palette = null;
-        paletteSize = 0;
+        clear();
     }
 
     public WallpaperTable(WallpaperTable other) {
@@ -83,6 +80,19 @@ public class WallpaperTable {
         }
 
         this.paletteSize = other.paletteSize;
+    }
+
+    public void clear() {
+        hashtable = null;
+        size = 0;
+        tombstones = 0;
+
+        palette = null;
+        paletteSize = 0;
+    }
+
+    public boolean empty() {
+        return size == 0;
     }
 
     // Note: this is called in the rendering pipeline. Should be fast and avoid exceptions.
@@ -249,6 +259,7 @@ public class WallpaperTable {
     }
 
     private static int makeEntry(int key, int paletteIndex) {
+        // Note: key + 1 is always okay because `face` (the lowest 3 bits of the key) is at most 5, while the bits can hold up to 7 before overflowing
         return (paletteIndex << IDX_BITS) | (key + 1);
     }
 
@@ -323,7 +334,7 @@ public class WallpaperTable {
         rehash(capacity << 1);
     }
 
-    // Note: may shring several times at once
+    // Note: may shrink several times at once
     private void maybeShrinkOrCompact() {
         int capacity = hashtable.length;
         int newCapacity = capacity;
@@ -440,5 +451,260 @@ public class WallpaperTable {
 
         palette[index] = new PaletteEntry(block, meta, side);
         return index;
+    }
+
+    private class Serialized {
+        public int[] faces;
+        public PaletteEntry[] palette;
+
+        public Serialized(int[] faces, PaletteEntry[] palette) {
+            this.faces = faces;
+            this.palette = palette;
+        }
+    }
+
+    private Serialized serialize() {
+        if (size == 0 || paletteSize == 0) {
+            return new Serialized(null, null);
+        }
+
+        int[] faces = new int[size];
+        for (int i = 0, j = 0; i < hashtable.length; ++i) {
+            int entry = hashtable[i];
+            if (entry != EMPTY && entry != TOMBSTONE) {
+                faces[j++] = entry;
+            }
+        }
+
+        PaletteEntry[] outPalette = new PaletteEntry[this.paletteSize];
+        for (int i = 0; i < paletteSize; ++i) {
+            outPalette[i] = new PaletteEntry(palette[i]);
+        }
+
+        return new Serialized(faces, outPalette);
+    }
+
+    private void deserialize(Serialized serialized) {
+        if (serialized.faces == null || serialized.palette == null) {
+            clear();
+            return;
+        }
+
+        int size = serialized.faces.length;
+        int paletteSize = serialized.palette.length;
+
+        if (paletteSize >= MAX_PALETTE_SIZE) {
+            throw new IllegalStateException("Serialized wallpaper palette exceeds maximum size");
+        }
+
+        int capacity = MIN_TABLE_SIZE;
+        while (capacity * LOAD_NUMERATOR / LOAD_DENOMINATOR < size) {
+            capacity <<= 1;
+        }
+
+        int paletteCapacity = MIN_TABLE_SIZE;
+        while (paletteCapacity < paletteSize) {
+            paletteCapacity <<= 1;
+        }
+
+        int[] hashtable = new int[capacity];
+        for (int i = 0; i < size; ++i) {
+            int entry = serialized.faces[i];
+            if (entry == EMPTY || entry == TOMBSTONE) {
+                throw new IllegalStateException("Unexpected special entry: " + entry);
+            }
+
+            int key = getKey(entry);
+            if (key < 0) {
+                throw new IllegalStateException("Unexpected entry with invalid key: " + entry);
+            }
+
+            int slot = findSlot(hashtable, key);
+            if (slot >= 0) {
+                throw new IllegalStateException("Unexpected entry with duplicate key: " + entry);
+            }
+            slot = ~slot;
+            hashtable[slot] = entry;
+        }
+
+        PaletteEntry[] palette = new PaletteEntry[paletteCapacity];
+        for (int i = 0; i < paletteSize; ++i) {
+            palette[i] = new PaletteEntry(serialized.palette[i]);
+        }
+
+        // Restore refCounts
+        for (int i = 0; i < size; ++i) {
+            int entry = serialized.faces[i];
+            int paletteIndex = entry >>> IDX_BITS;
+
+            if (paletteIndex < 0 || paletteIndex >= paletteSize) {
+                throw new IllegalStateException("Unexpected entry with invalid palette index: " + entry);
+            }
+
+            ++palette[paletteIndex].refCount;
+        }
+
+        this.hashtable = hashtable;
+        this.size = size;
+        this.tombstones = 0;
+        this.palette = palette;
+        this.paletteSize = paletteSize;
+    }
+
+    public void writeToNBT(NBTTagCompound nbt) {
+        if (size == 0 || paletteSize == 0) {
+            // Shortcut to save a heap allocation in trivial cases
+            nbt.removeTag("faces");
+            nbt.removeTag("palette");
+            return;
+        }
+
+        Serialized serialized = serialize();
+
+        if (serialized.faces == null) {
+            nbt.removeTag("faces");
+        } else {
+            nbt.setIntArray("faces", serialized.faces);
+        }
+
+        if (serialized.palette == null) {
+            nbt.removeTag("palette");
+        } else {
+            NBTTagList nbtPalette = new NBTTagList();
+
+            for (int i = 0; i < serialized.palette.length; ++i) {
+                PaletteEntry entry = serialized.palette[i];
+                NBTTagCompound nbtPaletteEntry = new NBTTagCompound();
+                entry.writeToNBT(nbtPaletteEntry);
+                
+                nbtPalette.appendTag(nbtPaletteEntry);
+            }
+
+            nbt.setTag("palette", nbtPalette);
+        }
+    }
+
+    public void readFromNBT(NBTTagCompound nbt) {
+        if (nbt == null) {
+            // Shortcut to save a heap allocation in trivial cases
+            clear();
+            return;
+        }
+
+        Serialized serialized = new Serialized(null, null);
+
+        if (nbt.hasKey("faces")) {
+            serialized.faces = nbt.getIntArray("faces");
+        }
+
+        if (nbt.hasKey("palette")) {
+            NBTTagList nbtPalette = nbt.getTagList("palette", 10);
+            serialized.palette = new PaletteEntry[nbtPalette.tagCount()];
+
+            for (int i = 0; i < serialized.palette.length; ++i) {
+                NBTTagCompound nbtPaletteEntry = nbtPalette.getCompoundTagAt(i);
+                PaletteEntry paletteEntry = new PaletteEntry();
+                paletteEntry.readFromNBT(nbtPaletteEntry);
+                serialized.palette[i] = paletteEntry;
+            }
+        }
+
+        deserialize(serialized);
+    }
+
+    public static final int MAX_BUFFER_SIZE = 4 + MAX_HASHTABLE_ENTRIES * 4 + 4 + MAX_PALETTE_SIZE * PaletteEntry.MAX_BUFFER_SIZE;
+
+    public void writeToBuffer(ByteBuffer buf) {
+        Serialized serialized = serialize();
+
+        if (serialized.faces == null) {
+            buf.putInt(0);
+        } else {
+            buf.putInt(serialized.faces.length);
+            for (int i = 0; i < serialized.faces.length; ++i) {
+                buf.putInt(serialized.faces[i]);
+            }
+        }
+
+        if (serialized.palette == null) {
+            buf.putInt(0);
+        } else {
+            buf.putInt(serialized.palette.length);
+            for (int i = 0; i < serialized.palette.length; ++i) {
+                serialized.palette[i].writeToBuffer(buf);
+            }
+        }
+    }
+
+    public void readFromBuffer(ByteBuffer buf) {
+        Serialized serialized = new Serialized(null, null);
+
+        int facesSize = buf.getInt();
+        if (facesSize > 0) {
+            serialized.faces = new int[facesSize];
+            for (int i = 0; i < facesSize; ++i) {
+                serialized.faces[i] = buf.getInt();
+            }
+        }
+
+        int paletteSize = buf.getInt();
+        if (paletteSize > 0) {
+            serialized.palette = new PaletteEntry[paletteSize];
+            for (int i = 0; i < paletteSize; ++i) {
+                PaletteEntry paletteEntry = new PaletteEntry();
+                paletteEntry.readFromBuffer(buf);
+                serialized.palette[i] = paletteEntry;
+            }
+        }
+
+        deserialize(serialized);
+    }
+
+    public void writeToBuffer(ByteBuf buf) {
+        Serialized serialized = serialize();
+
+        if (serialized.faces == null) {
+            buf.writeInt(0);
+        } else {
+            buf.writeInt(serialized.faces.length);
+            for (int i = 0; i < serialized.faces.length; ++i) {
+                buf.writeInt(serialized.faces[i]);
+            }
+        }
+
+        if (serialized.palette == null) {
+            buf.writeInt(0);
+        } else {
+            buf.writeInt(serialized.palette.length);
+            for (int i = 0; i < serialized.palette.length; ++i) {
+                serialized.palette[i].writeToBuffer(buf);
+            }
+        }
+    }
+
+    // Duplication because ChunkAPI uses two different kinds of buffers like a moron
+
+    public void readFromBuffer(ByteBuf buf) {
+        Serialized serialized = new Serialized(null, null);
+
+        int facesSize = buf.readInt();
+        if (facesSize > 0) {
+            serialized.faces = new int[facesSize];
+            for (int i = 0; i < facesSize; ++i) {
+                serialized.faces[i] = buf.readInt();
+            }
+        }
+
+        int paletteSize = buf.readInt();
+        if (paletteSize > 0) {
+            serialized.palette = new PaletteEntry[paletteSize];
+            for (int i = 0; i < paletteSize; ++i) {
+                PaletteEntry paletteEntry = new PaletteEntry();
+                paletteEntry.readFromBuffer(buf);
+                serialized.palette[i] = paletteEntry;
+            }
+        }
+
+        deserialize(serialized);
     }
 }

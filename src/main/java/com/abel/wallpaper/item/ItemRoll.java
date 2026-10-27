@@ -1,20 +1,10 @@
 package com.abel.wallpaper.item;
 
-import static com.abel.wallpaper.WallpaperMod.LOG;
-
-import java.util.List;
-
 import com.abel.wallpaper.handler.WallpaperHandler;
 import com.abel.wallpaper.world.IHasFaceOverride;
 import com.abel.wallpaper.world.PaletteEntry;
-import com.abel.wallpaper.world.WallpaperTable;
 
-import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -36,11 +26,6 @@ public class ItemRoll extends Item {
         float hitY,
         float hitZ
     ) {
-        // TODO: Do I need this check?
-        // if (world.isRemote) {
-        //     return true;
-        // }
-
         Block block = world.getBlock(x, y, z);
         if (block == null) {
             return false;
@@ -52,13 +37,14 @@ public class ItemRoll extends Item {
                 return false;
             }
 
-            WallpaperTable wpt = IHasFaceOverride.of(world).getWallpaperTableAt(x, y, z);
-            if (wpt != null) {
-                paletteEntry = wpt.getWallpaperEntry(x & 15, y, z & 15, side);  // Long-term: wrappers that do & 15 in IHasFaceOverride for all relevant methods
-                if (paletteEntry != null) {
-                    setPalette(stack, new PaletteEntry(paletteEntry));
-                    return true;
-                }
+            if (world.isRemote) {
+                return true;
+            }
+
+            paletteEntry = IHasFaceOverride.of(world).getWallpaperEntry(x, y, z, side);
+            if (paletteEntry != null) {
+                setPalette(stack, new PaletteEntry(paletteEntry));
+                return true;
             }
 
             int meta = world.getBlockMetadata(x, y, z);
@@ -69,25 +55,21 @@ public class ItemRoll extends Item {
             return true;
         }
 
-        WallpaperTable wpt = IHasFaceOverride.of(world).getWallpaperTableAt(x, y, z);
-        if (wpt == null) {
-            return false;
-        }
-        // LOG.warn("Roll wpt={} icon={}", wpt, wpt.getWallpaper(x & 15, y, z & 15, side));
-
         if (!WallpaperHandler.supportsWallpaper(block)) {
             return false;
         }
-        // LOG.warn("Roll supports wallpaper");
 
-        boolean changed = wpt.setWallpaperEntry(x & 15, y, z & 15, side, paletteEntry);
-        // LOG.warn("Roll changed={} icon={}", changed, wpt.getWallpaper(x & 15, y, z & 15, side));
+        if (world.isRemote) {
+            return !paletteEntry.matches(IHasFaceOverride.of(world).getWallpaperEntry(x, y, z, side));
+        }
+
+        boolean changed = IHasFaceOverride.of(world).setWallpaperEntry(x, y, z, side, paletteEntry);
         if (!changed) {
             return false;
         }
 
         // TODO: Sound?
-        // TODO: Mark chunk as dirty? Or I guess fire an "onWallpaperUpdate" somewhere?
+        world.markBlockForUpdate(x, y, z);
         WallpaperHandler.onWallpaperUpdate(world, x, y, z);
         stack.damageItem(1, player);
         return true;
@@ -112,26 +94,18 @@ public class ItemRoll extends Item {
         }
 
         NBTTagCompound tag = stack.getTagCompound();
-
-        if (
-            tag == null ||
-            !tag.hasKey("paletteBlock") ||
-            !tag.hasKey("paletteMeta") ||
-            !tag.hasKey("paletteSide")
-        ) {
+        if (tag == null) {
             return null;
         }
 
-        String blockName = tag.getString("paletteBlock");
-        int blockMeta = tag.getInteger("paletteMeta");
-        int side = tag.getInteger("paletteSide");
-
-        Block block = Block.getBlockFromName(blockName);
-        if (block == null) {
+        tag = tag.getCompoundTag("palette");
+        if (tag == null) {
             return null;
         }
 
-        return new PaletteEntry(block, blockMeta, side);
+        PaletteEntry paletteEntry = new PaletteEntry();
+        paletteEntry.readFromNBT(tag);
+        return paletteEntry;
     }
 
     public static void setPalette(ItemStack stack, PaletteEntry paletteEntry) {
@@ -145,10 +119,14 @@ public class ItemRoll extends Item {
         }
 
         NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null) tag = new NBTTagCompound();
-        tag.setString("paletteBlock", GameRegistry.findUniqueIdentifierFor(paletteEntry.block).toString());
-        tag.setInteger("paletteMeta", paletteEntry.blockMeta);
-        tag.setInteger("paletteSide", paletteEntry.blockSide);
+        if (tag == null) {
+            tag = new NBTTagCompound();
+        }
+
+        NBTTagCompound paletteTag = new NBTTagCompound();
+        paletteEntry.writeToNBT(paletteTag);
+        tag.setTag("palette", paletteTag);
+
         stack.setTagCompound(tag);
     }
 
@@ -158,10 +136,10 @@ public class ItemRoll extends Item {
         }
 
         NBTTagCompound tag = stack.getTagCompound();
-        if (tag == null) tag = new NBTTagCompound();
-        tag.removeTag("paletteBlock");
-        tag.removeTag("paletteMeta");
-        tag.removeTag("paletteSide");
+        if (tag == null) {
+            tag = new NBTTagCompound();
+        }
+        tag.removeTag("palette");
         stack.setTagCompound(tag);
     }
 }

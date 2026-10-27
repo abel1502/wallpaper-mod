@@ -85,7 +85,7 @@ public abstract class MixinWorldSlice implements IHasFaceOverride {
     }
 
     @Override
-    public WallpaperTable getWallpaperTableAt(int x, int y, int z) {
+    public WallpaperTable getLocalWallpaperTable(int x, int y, int z) {
         if (!containsBlock(x, y, z)) {
             return null;
         }
