@@ -1,5 +1,7 @@
 package com.abel.wallpaper.handler;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -49,6 +51,7 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void writeChunkToNBT(Chunk chunk, NBTTagCompound nbt) {
+        LOG.debug("[ABEL] WallpaperDataManager.writeChunkToNBT chunk.x={} chunk.z={} world.isRemote={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote);
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
         if (wpt != null) {
             wpt.writeToNBT(nbt);
@@ -57,15 +60,20 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void readChunkFromNBT(Chunk chunk, NBTTagCompound nbt) {
+        LOG.debug("[ABEL] WallpaperDataManager.readChunkFromNBT chunk.x={} chunk.z={} world.isRemote={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote);
         // Note: nbt may be null or empty. This is correctly handled by WallpaperTable.readFromNBT
-        WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
-        if (wpt != null) {
-            wpt.readFromNBT(nbt);
+        WallpaperTable wpt = new WallpaperTable();
+        wpt.readFromNBT(nbt);
+
+        if (wpt.empty()) {
+            wpt = null;
         }
+        IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
     }
 
     @Override
     public void cloneChunk(Chunk from, Chunk to) {
+        LOG.warn("[ABEL] WallpaperDataManager.cloneChunk from.x={} from.z={} to.x={} to.z={} world.isRemote={}", from.xPosition, from.zPosition, to.xPosition, to.zPosition, from.worldObj.isRemote);
         IHasWallpaperTable.of(to).setWallpaperTable(IHasWallpaperTable.of(from).getWallpaperTable());
     }
 
@@ -76,30 +84,56 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void writeToBuffer(Chunk chunk, int subChunkMask, boolean forceUpdate, ByteBuffer buffer) {
-        IHasWallpaperTable.of(chunk).getWallpaperTable().writeToBuffer(buffer);
-    }
+        LOG.info("[ABEL] WallpaperDataManager.writeToBuffer chunk.x={} chunk.z={} world.isRemote={} forceUpdate={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote, forceUpdate);
 
-    @Override
-    public void readFromBuffer(Chunk chunk, int subChunkMask, boolean forceUpdate, ByteBuffer buffer) {
-        WallpaperTable wpt = new WallpaperTable();
-        wpt.readFromBuffer(buffer);
-
-        if (wpt.empty()) {
-            wpt = null;
-        }
-        IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
-    }
-
-    @Override
-    public void writeBlockToPacket(Chunk chunk, int x, int y, int z, S23PacketBlockChange packet) {
-        // Note: x and z are local
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
         if (wpt == null) {
             return;
         }
 
+        wpt.writeToBuffer(buffer);
+    }
+
+    @Override
+    public void readFromBuffer(Chunk chunk, int subChunkMask, boolean forceUpdate, ByteBuffer buffer) {
+        LOG.info("[ABEL] WallpaperDataManager.readFromBuffer chunk.x={} chunk.z={} world.isRemote={} forceUpdate={}", chunk.xPosition, chunk.zPosition, chunk.worldObj.isRemote, forceUpdate);
+
+        WallpaperTable wpt;
+        if (buffer.hasRemaining()) {
+            wpt = new WallpaperTable();
+            wpt.readFromBuffer(buffer);
+
+            if (wpt.empty()) {
+                wpt = null;
+            }
+        } else {
+            wpt = null;
+        }
+
+        IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
+
+        if (chunk.worldObj.isRemote) {
+            WallpaperHandler.onWallpaperUpdate(chunk.worldObj, chunk.xPosition << 4, 0, chunk.zPosition << 4);
+        }
+    }
+
+    @Override
+    public void writeBlockToPacket(Chunk chunk, int x, int y, int z, S23PacketBlockChange packet) {
+        LOG.warn("[ABEL] WallpaperDataManager.writeBlockToPacket x={} y={} z={} world.isRemote={}", x, y, z, chunk.worldObj.isRemote);
+        // Note: x and z are local
+
         IBlockPacket myPacket = (IBlockPacket)packet;
         PaletteEntry[] faceWallpapers = myPacket.abel$getFaceWallpapers();
+
+        WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
+        if (wpt == null) {
+            for (int face = 0; face < 6; face++) {
+                faceWallpapers[face] = null;
+            }
+
+            return;
+        }
+
         for (int face = 0; face < 6; face++) {
             faceWallpapers[face] = wpt.getWallpaperEntry(x, y, z, face);
         }
@@ -107,6 +141,9 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
 
     @Override
     public void readBlockFromPacket(Chunk chunk, int x, int y, int z, S23PacketBlockChange packet) {
+        LOG.warn("[ABEL] WallpaperDataManager.readBlockFromPacket x={} y={} z={} world.isRemote={}", x, y, z, chunk.worldObj.isRemote);
+        // Note: x and z are local
+
         IBlockPacket myPacket = (IBlockPacket)packet;
         PaletteEntry[] faceWallpapers = myPacket.abel$getFaceWallpapers();
 
@@ -117,23 +154,29 @@ public final class WallpaperDataManager implements DataManager.ChunkDataManager,
                 break;
             }
         }
-        if (!hasWallpaper) {
-            return;
-        }
 
         WallpaperTable wpt = IHasWallpaperTable.of(chunk).getWallpaperTable();
         if (wpt == null) {
+            if (!hasWallpaper) {
+                return;
+            }
+
             wpt = new WallpaperTable();
             IHasWallpaperTable.of(chunk).setWallpaperTable(wpt);
         }
 
+        boolean changed = false;
         for (int face = 0; face < 6; face++) {
-            wpt.setWallpaperEntry(x, y, z, face, faceWallpapers[face]);
+            changed |= wpt.setWallpaperEntry(x, y, z, face, faceWallpapers[face]);
             // Note: no render updates scheduled here. Render update should happen due to the block update in the first place, right?
         }
 
         if (wpt.empty()) {
             IHasWallpaperTable.of(chunk).setWallpaperTable(null);
+        }
+
+        if (changed) {
+            WallpaperHandler.onWallpaperUpdate(chunk.worldObj, x, y, z);
         }
     }
 

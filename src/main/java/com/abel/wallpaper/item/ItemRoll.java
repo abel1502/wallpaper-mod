@@ -1,5 +1,7 @@
 package com.abel.wallpaper.item;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import com.abel.wallpaper.handler.WallpaperHandler;
 import com.abel.wallpaper.world.IHasFaceOverride;
 import com.abel.wallpaper.world.PaletteEntry;
@@ -69,6 +71,7 @@ public class ItemRoll extends Item {
         }
 
         // TODO: Sound?
+        LOG.warn("[ABEL] ItemRoll.onItemUse x={} y={} z={} side={}", x, y, z, side);
         world.markBlockForUpdate(x, y, z);
         WallpaperHandler.onWallpaperUpdate(world, x, y, z);
         stack.damageItem(1, player);

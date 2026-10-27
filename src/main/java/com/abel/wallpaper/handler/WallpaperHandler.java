@@ -1,5 +1,7 @@
 package com.abel.wallpaper.handler;
 
+import static com.abel.wallpaper.WallpaperMod.LOG;
+
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -30,10 +32,14 @@ public class WallpaperHandler {
 
     // TODO: Separate visual update (should trigger a re-render) and source-of-truth update (should propagate the change to clients by marking the block for update, and the chunk as dirty)?
     public static void onWallpaperUpdate(World world, int x, int y, int z) {
-        Chunk chunk = world.getChunkFromBlockCoords(x, z);
-        if (chunk != null) {
-            // Should always be the case, but just to be safe
-            world.getChunkFromBlockCoords(x, z).setChunkModified();
+        LOG.warn("[ABEL] WallpaperHandler.onWallpaperUpdate x={} y={} z={} world.isRemote={}", x, y, z, world.isRemote);
+
+        if (!world.isRemote) {
+            Chunk chunk = world.getChunkFromBlockCoords(x, z);
+            if (chunk != null) {
+                // Should always be the case, but just to be safe
+                world.getChunkFromBlockCoords(x, z).setChunkModified();
+            }
         }
         
         // world.markBlockForUpdate(x, y, z);
