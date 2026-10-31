@@ -9,8 +9,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.abel.wallpaper.client.ctm.WallpaperCTMRenderer;
 import com.abel.wallpaper.world.IHasFaceOverride;
 
 import net.minecraft.block.Block;
@@ -49,6 +51,48 @@ public abstract class MixinRenderBlocks {
 
         if (iconOverride != null) {
             info.setReturnValue(iconOverride);
+        }
+    }
+
+    @Inject(method = "renderFaceYNeg(Lnet/minecraft/block/Block;DDDLnet/minecraft/util/IIcon;)V", at = @At("HEAD"), cancellable = true)
+    private void abel$renderFaceYNeg(Block block, double x, double y, double z, IIcon icon, CallbackInfo info) {
+        if (WallpaperCTMRenderer.tryRender((RenderBlocks)(Object)this, block, x, y, z, 0)) {
+            info.cancel();
+        }
+    }
+
+    @Inject(method = "renderFaceYPos(Lnet/minecraft/block/Block;DDDLnet/minecraft/util/IIcon;)V", at = @At("HEAD"), cancellable = true)
+    private void abel$renderFaceYPos(Block block, double x, double y, double z, IIcon icon, CallbackInfo info) {
+        if (WallpaperCTMRenderer.tryRender((RenderBlocks)(Object)this, block, x, y, z, 1)) {
+            info.cancel();
+        }
+    }
+
+    @Inject(method = "renderFaceZNeg(Lnet/minecraft/block/Block;DDDLnet/minecraft/util/IIcon;)V", at = @At("HEAD"), cancellable = true)
+    private void abel$renderFaceZNeg(Block block, double x, double y, double z, IIcon icon, CallbackInfo info) {
+        if (WallpaperCTMRenderer.tryRender((RenderBlocks)(Object)this, block, x, y, z, 2)) {
+            info.cancel();
+        }
+    }
+
+    @Inject(method = "renderFaceZPos(Lnet/minecraft/block/Block;DDDLnet/minecraft/util/IIcon;)V", at = @At("HEAD"), cancellable = true)
+    private void abel$renderFaceZPos(Block block, double x, double y, double z, IIcon icon, CallbackInfo info) {
+        if (WallpaperCTMRenderer.tryRender((RenderBlocks)(Object)this, block, x, y, z, 3)) {
+            info.cancel();
+        }
+    }
+
+    @Inject(method = "renderFaceXNeg(Lnet/minecraft/block/Block;DDDLnet/minecraft/util/IIcon;)V", at = @At("HEAD"), cancellable = true)
+    private void abel$renderFaceXNeg(Block block, double x, double y, double z, IIcon icon, CallbackInfo info) {
+        if (WallpaperCTMRenderer.tryRender((RenderBlocks)(Object)this, block, x, y, z, 4)) {
+            info.cancel();
+        }
+    }
+
+    @Inject(method = "renderFaceXPos(Lnet/minecraft/block/Block;DDDLnet/minecraft/util/IIcon;)V", at = @At("HEAD"), cancellable = true)
+    private void abel$renderFaceXPos(Block block, double x, double y, double z, IIcon icon, CallbackInfo info) {
+        if (WallpaperCTMRenderer.tryRender((RenderBlocks)(Object)this, block, x, y, z, 5)) {
+            info.cancel();
         }
     }
 }

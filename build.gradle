@@ -61,6 +61,10 @@ dependencies {
 
     compileOnly "curse.maven:angelica-988067:8884082"
     compileOnly "mega:fluidlogged-mc1.7.10:0.2.0"
+
+    // Connected textures (runtime-optional, guarded with @Optional)
+    compileOnly "com.hbm:HBM-NTM:1.0.27_X5863:dev"
+    compileOnly "team.chisel.ctmlib:CTMLib:MC1.7.10-1.4.1.5:deobf"
 }
 
 processResources {
