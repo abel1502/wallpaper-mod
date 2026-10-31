@@ -35,4 +35,10 @@ Allows you to paint the texture of any block[^1] on any face of any other block[
 
 ## Status
 
-Ready for use, but not yet heavily tested. No sounds so far.
+Ready for use and play-tested personally.
+
+## AI use disclosure
+
+Changes on Oct 31st have been made with the use of DeepSeek. The changes
+include connected textures support for Chisel and HBM's NTM and sound effects
+for
