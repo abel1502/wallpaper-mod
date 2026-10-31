@@ -41,6 +41,14 @@ repositories {
         url = "https://gregtech.mechaenetia.com/"
     }
     maven {
+        name = 'NTMr proxy'
+        url = 'https://maven.ntmr.dev/proxy/'
+    }
+    maven {
+        name = 'NTMr release'
+        url = 'https://maven.ntmr.dev/releases/'
+    }
+    maven {
         name = "CurseMaven"
         url = "https://cursemaven.com"
     }
