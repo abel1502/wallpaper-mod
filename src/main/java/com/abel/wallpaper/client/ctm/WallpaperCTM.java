@@ -9,8 +9,8 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.abel.wallpaper.world.IHasFaceOverride;
 import com.abel.wallpaper.world.PaletteEntry;
+import com.abel.wallpaper.world.WallpaperCompat;
 
 /**
  * Resolves connected-texture fragments for a painted face.
@@ -115,11 +115,6 @@ public final class WallpaperCTM {
      * Returns {@code null} if there's no wallpaper there or the block access isn't supported.
      */
     public static PaletteEntry getEntry(IBlockAccess world, int x, int y, int z, int side) {
-        try {
-            return IHasFaceOverride.of(world).getWallpaperEntry(x, y, z, side);
-        } catch (ClassCastException e) {
-            // Unsupported IBlockAccess implementation; already reported by MixinRenderBlocks.
-            return null;
-        }
+        return WallpaperCompat.getEntry(world, x, y, z, side);
     }
 }

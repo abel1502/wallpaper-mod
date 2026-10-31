@@ -1,6 +1,5 @@
 package com.abel.wallpaper.world;
 
-import net.minecraft.block.Block;
 import net.minecraft.world.IBlockAccess;
 
 /**
@@ -15,16 +14,15 @@ public final class WallpaperCompat {
     }
 
     /**
-     * Returns {@code true} if the face {@code side} of the block at {@code (x, y, z)} carries a
-     * wallpaper whose source block and metadata match the given {@code block}/{@code meta}.
+     * Returns the wallpaper entry for the face {@code side} of the block at {@code (x, y, z)},
+     * or {@code null} if there is none (or the block access isn't supported).
      */
-    public static boolean hasMatchingWallpaper(IBlockAccess world, int x, int y, int z, int side, Block block, int meta) {
+    public static PaletteEntry getEntry(IBlockAccess world, int x, int y, int z, int side) {
         try {
-            PaletteEntry entry = IHasFaceOverride.of(world).getWallpaperEntry(x, y, z, side);
-            return entry != null && entry.block == block && entry.blockMeta == (short) meta;
+            return IHasFaceOverride.of(world).getWallpaperEntry(x, y, z, side);
         } catch (ClassCastException e) {
             // Unsupported IBlockAccess implementation (already reported by MixinRenderBlocks).
-            return false;
+            return null;
         }
     }
 }

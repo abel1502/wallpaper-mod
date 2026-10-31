@@ -12,14 +12,16 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import team.chisel.ctmlib.CTM;
 
+import com.abel.wallpaper.world.PaletteEntry;
 import com.abel.wallpaper.world.WallpaperCompat;
 
 /**
  * Makes Chisel / CTMLib connected-texture blocks also connect to adjacent painted faces.
  *
  * <p>Hooks {@link CTM#isConnected(IBlockAccess, int, int, int, ForgeDirection, Block, int)} so a
- * neighbor carrying a matching wallpaper is treated as connected. Only loaded when Chisel is
- * present (see {@code LateMixins}).</p>
+ * neighbor carrying a matching wallpaper is treated as connected, and a painted neighbor's
+ * wallpaper overrides its underlying block type. Only loaded when Chisel is present
+ * (see {@code LateMixins}).</p>
  */
 @Pseudo
 @Mixin(CTM.class)
@@ -32,8 +34,9 @@ public abstract class MixinCTM {
         remap = false
     )
     private void abel$isConnected(IBlockAccess world, int x, int y, int z, ForgeDirection dir, Block block, int meta, CallbackInfoReturnable<Boolean> info) {
-        if (WallpaperCompat.hasMatchingWallpaper(world, x, y, z, dir.ordinal(), block, meta)) {
-            info.setReturnValue(true);
+        PaletteEntry wallpaper = WallpaperCompat.getEntry(world, x, y, z, dir.ordinal());
+        if (wallpaper != null) {
+            info.setReturnValue(wallpaper.block == block && wallpaper.blockMeta == (short) meta);
         }
     }
 }

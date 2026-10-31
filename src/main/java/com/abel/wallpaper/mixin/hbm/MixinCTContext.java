@@ -13,6 +13,7 @@ import net.minecraft.world.IBlockAccess;
 import com.hbm.render.block.ct.CTContext;
 import com.hbm.render.block.ct.IBlockCT;
 
+import com.abel.wallpaper.world.PaletteEntry;
 import com.abel.wallpaper.world.WallpaperCompat;
 
 /**
@@ -20,7 +21,8 @@ import com.abel.wallpaper.world.WallpaperCompat;
  *
  * <p>Surgically redirects the {@link IBlockCT#canConnect} call inside {@link CTContext#loadContext}
  * so a neighbor is treated as connected when it either connects normally or carries a wallpaper
- * matching the block being rendered. Only loaded when HBM is present (see {@code LateMixins}).</p>
+ * matching the block being rendered. A painted neighbor's wallpaper takes precedence over its
+ * underlying block type. Only loaded when HBM is present (see {@code LateMixins}).</p>
  */
 @Pseudo
 @Mixin(CTContext.class)
@@ -28,7 +30,8 @@ public abstract class MixinCTContext {
 
     /**
      * @author Abel's Wallpaper Mod
-     * @reason Also treat neighbors carrying a matching wallpaper as connected.
+     * @reason Treat neighbors carrying a matching wallpaper as connected, and let a painted
+     *         neighbor's wallpaper override its underlying block type.
      */
     @Redirect(
         method = "loadContext",
@@ -47,8 +50,11 @@ public abstract class MixinCTContext {
         @Local(name = "y") int y,
         @Local(name = "z") int z
     ) {
-        int meta = world.getBlockMetadata(x, y, z);
-        return owner.canConnect(world, nx, ny, nz, neighbor)
-            || WallpaperCompat.hasMatchingWallpaper(world, nx, ny, nz, i, (Block) owner, meta);
+        PaletteEntry wallpaper = WallpaperCompat.getEntry(world, nx, ny, nz, i);
+        if (wallpaper != null) {
+            int meta = world.getBlockMetadata(x, y, z);
+            return wallpaper.block == (Block) owner && wallpaper.blockMeta == (short) meta;
+        }
+        return owner.canConnect(world, nx, ny, nz, neighbor);
     }
 }
