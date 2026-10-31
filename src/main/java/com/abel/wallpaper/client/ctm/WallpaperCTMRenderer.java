@@ -13,13 +13,12 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.abel.wallpaper.world.PaletteEntry;
 
 /**
- * Splits a painted block face into four sub-faces and renders each with its own quadrant icon.
+ * Renders a painted block face, either as a single flat quad or as four connected-texture
+ * sub-faces.
  *
  * <p>The geometry and ambient-occlusion interpolation are adapted from
  * {@code com.hbm.render.block.ct.RenderBlocksCT}, generalized to read the render bounds and the
- * per-corner light/color values off the live {@link RenderBlocks} instance. This lets us only
- * replace the faces that actually carry a CTM wallpaper, while every other face keeps rendering
- * through vanilla.</p>
+ * per-corner light/color values off the live {@link RenderBlocks} instance.</p>
  */
 @SideOnly(Side.CLIENT)
 public final class WallpaperCTMRenderer {
@@ -44,23 +43,47 @@ public final class WallpaperCTMRenderer {
     }
 
     /**
-     * Attempts to render the given face as a connected-texture wallpaper.
+     * Intercepts a normal-cube face (the vanilla {@code RenderBlocks.renderFace*} path). Only
+     * connected-texture wallpapers are rendered here; flat wallpapers fall through so vanilla can
+     * handle them (including log/quartz UV rotation).
      *
-     * @return {@code true} if the face was rendered, in which case the caller should cancel the
-     *         original {@code renderFace*} call.
+     * @return {@code true} if the face was rendered.
      */
     public static boolean tryRender(RenderBlocks rb, Block block, double x, double y, double z, int side) {
+        return tryRenderInternal(rb, block, x, y, z, x, y, z, side, false);
+    }
+
+    /**
+     * Intercepts a connected-texture host face (HBM's {@code RenderBlocksCT} / Chisel's
+     * {@code RenderBlocksCTM}, which ignore per-face texture overrides). Both flat and
+     * connected-texture wallpapers are rendered here.
+     *
+     * @param lx/ly/lz world position used to look up the wallpaper
+     * @param rx/ry/rz position to draw at (world for HBM, block-local {@code 0,0,0} for Chisel,
+     *                 whose tessellator is already translated)
+     * @return {@code true} if the face was rendered.
+     */
+    public static boolean tryRenderHost(RenderBlocks rb, Block block, double lx, double ly, double lz, double rx, double ry, double rz, int side) {
+        return tryRenderInternal(rb, block, lx, ly, lz, rx, ry, rz, side, true);
+    }
+
+    private static boolean tryRenderInternal(
+        RenderBlocks rb, Block block,
+        double lx, double ly, double lz,
+        double rx, double ry, double rz,
+        int side, boolean renderFlat
+    ) {
         IBlockAccess world = rb.blockAccess;
         if (world == null) {
             return false;
         }
 
-        int bx = (int) x;
-        int by = (int) y;
-        int bz = (int) z;
+        int bx = (int) lx;
+        int by = (int) ly;
+        int bz = (int) lz;
 
-        // Only handle whole-block positions (normal-cube world rendering).
-        if (x != bx || y != by || z != bz) {
+        // Only handle whole-block positions.
+        if (lx != bx || ly != by || lz != bz) {
             return false;
         }
 
@@ -70,28 +93,85 @@ public final class WallpaperCTMRenderer {
         }
 
         IIcon[] quadrants = WallpaperCTM.getQuadrants(world, bx, by, bz, side, entry);
-        if (quadrants == null) {
-            return false;
+        if (quadrants != null) {
+            instance.render(rb, rx, ry, rz, side, quadrants);
+            return true;
         }
 
-        return instance.render(rb, x, y, z, side, quadrants);
+        if (renderFlat && entry.icon != null) {
+            instance.renderFlat(rb, rx, ry, rz, side, entry.icon);
+            return true;
+        }
+
+        return false;
     }
 
-    private boolean render(RenderBlocks rb, double x, double y, double z, int side, IIcon[] quadrants) {
+    private void render(RenderBlocks rb, double x, double y, double z, int side, IIcon[] quadrants) {
         this.rb = rb;
         this.enableAO = rb.enableAO;
+        initSideInfo(side);
 
+        double[][] c = corners(side, x, y, z);
+        drawFace(c[0], c[1], c[2], c[3], quadrants[0], quadrants[1], quadrants[2], quadrants[3]);
+    }
+
+    private void renderFlat(RenderBlocks rb, double x, double y, double z, int side, IIcon icon) {
+        this.rb = rb;
+        this.enableAO = rb.enableAO;
+        initSideInfo(side);
+
+        double[][] c = corners(side, x, y, z);
+        drawSubFace(c[0], tl, c[1], tr, c[2], bl, c[3], br, icon);
+    }
+
+    private double[][] corners(int side, double x, double y, double z) {
+        // Wallpapers only ever apply to full cubes, so the render bounds are always 0..1.
+        // (HBM's RenderBlocksCT never calls setRenderBoundsFromBlock, leaving the inherited
+        // render bounds at 0.0, so relying on rb.renderMaxX here would produce degenerate faces.)
         switch (side) {
-            case 0: renderFaceYNeg(x, y, z, quadrants); break;
-            case 1: renderFaceYPos(x, y, z, quadrants); break;
-            case 2: renderFaceZNeg(x, y, z, quadrants); break;
-            case 3: renderFaceZPos(x, y, z, quadrants); break;
-            case 4: renderFaceXNeg(x, y, z, quadrants); break;
-            case 5: renderFaceXPos(x, y, z, quadrants); break;
-            default: return false;
+            case 0: // DOWN
+                return new double[][] {
+                    {x, y, z + 1},
+                    {x + 1, y, z + 1},
+                    {x, y, z},
+                    {x + 1, y, z},
+                };
+            case 1: // UP
+                return new double[][] {
+                    {x, y + 1, z},
+                    {x + 1, y + 1, z},
+                    {x, y + 1, z + 1},
+                    {x + 1, y + 1, z + 1},
+                };
+            case 2: // NORTH
+                return new double[][] {
+                    {x + 1, y + 1, z},
+                    {x, y + 1, z},
+                    {x + 1, y, z},
+                    {x, y, z},
+                };
+            case 3: // SOUTH
+                return new double[][] {
+                    {x, y + 1, z + 1},
+                    {x + 1, y + 1, z + 1},
+                    {x, y, z + 1},
+                    {x + 1, y, z + 1},
+                };
+            case 4: // WEST
+                return new double[][] {
+                    {x, y + 1, z},
+                    {x, y + 1, z + 1},
+                    {x, y, z},
+                    {x, y, z + 1},
+                };
+            default: // EAST
+                return new double[][] {
+                    {x + 1, y + 1, z + 1},
+                    {x + 1, y + 1, z},
+                    {x + 1, y, z + 1},
+                    {x + 1, y, z},
+                };
         }
-
-        return true;
     }
 
     private void initSideInfo(int side) {
@@ -138,66 +218,6 @@ public final class WallpaperCTMRenderer {
         VertInfo.avg(cl, tl, bl);
         VertInfo.avg(cr, tr, br);
         VertInfo.avg(cc, tl, tr, bl, br);
-    }
-
-    private void renderFaceXPos(double x, double y, double z, IIcon[] q) {
-        initSideInfo(ForgeDirection.EAST.ordinal());
-        drawFace(
-            new double[] {x + rb.renderMaxX, y + rb.renderMaxY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMaxY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMinY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMinY, z + rb.renderMinZ},
-            q[0], q[1], q[2], q[3]);
-    }
-
-    private void renderFaceXNeg(double x, double y, double z, IIcon[] q) {
-        initSideInfo(ForgeDirection.WEST.ordinal());
-        drawFace(
-            new double[] {x + rb.renderMinX, y + rb.renderMaxY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMaxY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMinY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMinY, z + rb.renderMaxZ},
-            q[0], q[1], q[2], q[3]);
-    }
-
-    private void renderFaceYPos(double x, double y, double z, IIcon[] q) {
-        initSideInfo(ForgeDirection.UP.ordinal());
-        drawFace(
-            new double[] {x + rb.renderMinX, y + rb.renderMaxY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMaxY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMaxY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMaxY, z + rb.renderMaxZ},
-            q[0], q[1], q[2], q[3]);
-    }
-
-    private void renderFaceYNeg(double x, double y, double z, IIcon[] q) {
-        initSideInfo(ForgeDirection.DOWN.ordinal());
-        drawFace(
-            new double[] {x + rb.renderMinX, y + rb.renderMinY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMinY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMinY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMinY, z + rb.renderMinZ},
-            q[0], q[1], q[2], q[3]);
-    }
-
-    private void renderFaceZPos(double x, double y, double z, IIcon[] q) {
-        initSideInfo(ForgeDirection.SOUTH.ordinal());
-        drawFace(
-            new double[] {x + rb.renderMinX, y + rb.renderMaxY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMaxY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMinY, z + rb.renderMaxZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMinY, z + rb.renderMaxZ},
-            q[0], q[1], q[2], q[3]);
-    }
-
-    private void renderFaceZNeg(double x, double y, double z, IIcon[] q) {
-        initSideInfo(ForgeDirection.NORTH.ordinal());
-        drawFace(
-            new double[] {x + rb.renderMaxX, y + rb.renderMaxY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMaxY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMaxX, y + rb.renderMinY, z + rb.renderMinZ},
-            new double[] {x + rb.renderMinX, y + rb.renderMinY, z + rb.renderMinZ},
-            q[0], q[1], q[2], q[3]);
     }
 
     private void drawFace(

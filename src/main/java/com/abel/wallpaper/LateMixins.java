@@ -25,10 +25,12 @@ public class LateMixins implements ILateMixinLoader {
 
         if (loadedMods.contains("hbm")) {
             mixins.add("hbm.MixinCTContext");
+            mixins.add("hbm.MixinRenderBlocksCT");
         }
 
         if (loadedMods.contains("chisel")) {
             mixins.add("chisel.MixinCTM");
+            mixins.add("chisel.MixinRenderBlocksCTM");
         }
 
         return mixins;
