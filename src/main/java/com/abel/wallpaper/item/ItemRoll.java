@@ -44,6 +44,9 @@ public class ItemRoll extends Item {
                 return true;
             }
 
+            // Soft paper/cloth "pickup" sound when sampling a texture
+            world.playSoundEffect((double)x + 0.5D, (double)y + 0.5D, (double)z + 0.5D, "step.cloth", 0.6F, 1.0F);
+
             paletteEntry = IHasFaceOverride.of(world).getWallpaperEntry(x, y, z, side);
             if (paletteEntry != null) {
                 setPalette(stack, new PaletteEntry(paletteEntry));
@@ -70,7 +73,8 @@ public class ItemRoll extends Item {
             return false;
         }
 
-        // TODO: Sound?
+        // Soft paper/cloth sound when applying the wallpaper
+        world.playSoundEffect((double)x + 0.5D, (double)y + 0.5D, (double)z + 0.5D, "dig.cloth", 1.0F, 1.0F);
         LOG.debug("[ABEL] ItemRoll.onItemUse x={} y={} z={} side={}", x, y, z, side);
         world.markBlockForUpdate(x, y, z);
 

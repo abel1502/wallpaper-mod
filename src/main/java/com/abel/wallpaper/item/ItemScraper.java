@@ -34,7 +34,8 @@ public class ItemScraper extends Item {
             return false;
         }
 
-        // TODO: Sound?
+        // Soft scraping sound (vanilla cloth break, slightly lowered pitch)
+        world.playSoundEffect((double)x + 0.5D, (double)y + 0.5D, (double)z + 0.5D, "dig.cloth", 1.0F, 0.8F);
         LOG.debug("[ABEL] ItemScraper.onItemUse x={} y={} z={} side={}", x, y, z, side);
         world.markBlockForUpdate(x, y, z);
 
