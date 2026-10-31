@@ -8,3 +8,4 @@
 *.kra
 
 /justfile
+/opencode.jsonc
