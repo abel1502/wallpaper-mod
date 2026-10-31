@@ -8,6 +8,8 @@ import net.minecraft.block.Block;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 
+import com.hbm.blocks.generic.BlockEnumMultiCT;
+import com.hbm.render.block.ct.CTStitchReceiver;
 import com.hbm.render.block.ct.IBlockCT;
 
 import com.abel.wallpaper.world.PaletteEntry;
@@ -45,7 +47,7 @@ final class HbmCTM {
 
         try {
             IBlockCT ct = (IBlockCT) source;
-            IIcon[] fragments = ct.getFragments(world, x, y, z, side);
+            IIcon[] fragments = getFragments(ct, world, x, y, z, side, sourceMeta);
             if (fragments == null || fragments.length < 20) {
                 return null;
             }
@@ -76,6 +78,21 @@ final class HbmCTM {
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    // Returns the fragment cache for a CT block, using the *source* metadata. Handles
+    // BlockEnumMultiCT (whose getFragments otherwise reads the host block's metadata) explicitly.
+    @Optional.Method(modid = "hbm")
+    private static IIcon[] getFragments(IBlockCT ct, IBlockAccess world, int x, int y, int z, int side, int sourceMeta) {
+        if (ct instanceof BlockEnumMultiCT) {
+            CTStitchReceiver[] receivers = ((BlockEnumMultiCT) ct).receivers;
+            if (receivers == null || receivers.length == 0) {
+                return null;
+            }
+            CTStitchReceiver receiver = receivers[sourceMeta % receivers.length];
+            return receiver != null ? receiver.fragCache : null;
+        }
+        return ct.getFragments(world, x, y, z, side);
     }
 
     // Ported from com.hbm.render.block.ct.CTContext#cornerType.

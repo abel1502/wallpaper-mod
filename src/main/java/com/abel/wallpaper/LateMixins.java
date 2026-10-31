@@ -23,6 +23,14 @@ public class LateMixins implements ILateMixinLoader {
             mixins.add("angelica.MixinWorldSlice");
         }
 
+        if (loadedMods.contains("hbm")) {
+            mixins.add("hbm.MixinCTContext");
+        }
+
+        if (loadedMods.contains("chisel")) {
+            mixins.add("chisel.MixinCTM");
+        }
+
         return mixins;
     }
 }
