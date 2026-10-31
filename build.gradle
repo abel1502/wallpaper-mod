@@ -60,7 +60,7 @@ dependencies {
     compileOnly "com.github.LegacyModdingMC.UniMixins:unimixins-all-1.7.10:0.3.1:dev"
 
     compileOnly "curse.maven:angelica-988067:8884082"
-    compileOnly "mega:fluidlogged-mc1.7.10:0.2.0"
+    compileOnly "mega:fluidlogged-mc1.7.10:0.2.0"  // Indirect dependency for the stuff we patch in Angelica, crashes without it
 
     // Connected textures (runtime-optional, guarded with @Optional)
     compileOnly "com.hbm:HBM-NTM:1.0.27_X5863:dev"
